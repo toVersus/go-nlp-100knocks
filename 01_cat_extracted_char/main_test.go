@@ -5,6 +5,56 @@ import (
 	"testing"
 )
 
+var catCharTests = []struct {
+	name   string
+	str    string
+	expect string
+}{
+	{
+		name:   "should concatenate extracted char from DBCS string",
+		str:    "パタトクカシーー",
+		expect: "パトカー",
+	},
+}
+
+func TestDelCharInSequence(t *testing.T) {
+	for _, testcase := range catCharTests {
+		t.Log(testcase.name)
+
+		if result := delCharInSequence(testcase.str); !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %s\n expect => %s\n", result, testcase.expect)
+		}
+	}
+}
+
+func BenchmarkDelCharInSequence(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range catCharTests {
+			delCharInSequence(testcase.str)
+		}
+	}
+}
+
+func TestCatCharInSequence(t *testing.T) {
+	for _, testcase := range catCharTests {
+		t.Log(testcase.name)
+
+		if result := catCharInSequence(testcase.str); !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %s\n expect => %s\n", result, testcase.expect)
+		}
+	}
+}
+
+func BenchmarkCatCharInSequence(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range catCharTests {
+			catCharInSequence(testcase.str)
+		}
+	}
+}
+
 var catSepCharAlternatelyTests = []struct {
 	name   string
 	str    string
@@ -61,10 +111,10 @@ var catSepCharAlternatelyTests = []struct {
 	},
 }
 
-func TestCatSepCharAlternately(t *testing.T) {
+func TestCatSepCharInSequence(t *testing.T) {
 	for _, testcase := range catSepCharAlternatelyTests {
 		t.Log(testcase.name)
-		if result := catSepCharAlternately(testcase.str, testcase.isOdd); !reflect.DeepEqual(result, testcase.expect) {
+		if result := catSepCharInSequence(testcase.str, testcase.isOdd); !reflect.DeepEqual(result, testcase.expect) {
 			t.Errorf("result => %s\n expect => %s\n", result, testcase.expect)
 		}
 	}
