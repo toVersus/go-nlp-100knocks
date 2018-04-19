@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -40,49 +41,38 @@ func TestIsInArray(t *testing.T) {
 	}
 }
 
-var listElementTests = []struct {
+var elemSymbolTests = []struct {
 	name   string
 	str    string
 	a      []int
-	expect map[int]string
+	expect []string
 }{
 	{
-		name: "should return each symbol of an element with map array from 1 to 20",
-		str:  "Hi He Lied Because Boron Could Not Oxidize Fluorine. New Nations Might Also Sign Peace Security Clause. Arthur King Can.",
-		a:    []int{8, 7, 16, 15, 1, 9, 5, 6, 19},
-		expect: map[int]string{
-			1:  "H",
-			2:  "He",
-			3:  "Li",
-			4:  "Be",
-			5:  "B",
-			6:  "C",
-			7:  "N",
-			8:  "O",
-			9:  "F",
-			10: "Ne",
-			11: "Na",
-			12: "Mi",
-			13: "Al",
-			14: "Si",
-			15: "P",
-			16: "S",
-			17: "Cl",
-			18: "Ar",
-			19: "K",
-			20: "Ca",
-		},
+		name:   "should return each symbol of an element with map array from 1 to 20",
+		str:    "Hi He Lied Because Boron Could Not Oxidize Fluorine. New Nations Might Also Sign Peace Security Clause. Arthur King Can.",
+		a:      []int{8, 7, 16, 15, 1, 9, 5, 6, 19},
+		expect: []string{"H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mi", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca"},
 	},
 }
 
 func TestGetElemSymbol(t *testing.T) {
-	for _, testcase := range listElementTests {
+	for _, testcase := range elemSymbolTests {
 		t.Log(testcase.name)
-		result := getElemSymbol(testcase.str, testcase.a)
-		for i := range result {
-			if !reflect.DeepEqual(result[i+1], testcase.expect[i+1]) {
-				t.Errorf("result[%d] => %#v\n expect[%d] => %#v\n", i+1, result[i+1], i+1, testcase.expect[i+1])
-			}
+		symbol := getElemSymbol(testcase.str, testcase.a)
+
+		keys := []int{}
+		for key := range symbol {
+			keys = append(keys, key)
+		}
+		sort.Ints(keys)
+
+		result := []string{}
+		for _, idx := range keys {
+			result = append(result, symbol[idx])
+		}
+
+		if !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
 		}
 	}
 }
@@ -90,16 +80,69 @@ func TestGetElemSymbol(t *testing.T) {
 func BenchmarkGetElemSymbol(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		for _, testcase := range listElementTests {
+		for _, testcase := range elemSymbolTests {
 			getElemSymbol(testcase.str, testcase.a)
 		}
 	}
 }
 
-func BenchmarkListElement3(b *testing.B) {
+func TestGetElemSymbolWithExtraWork(t *testing.T) {
+	for _, testcase := range elemSymbolTests {
+		t.Log(testcase.name)
+		symbol := getElemSymbolWithExtraWork(testcase.str, testcase.a)
+
+		keys := []int{}
+		for key := range symbol {
+			keys = append(keys, key)
+		}
+		sort.Ints(keys)
+
+		result := []string{}
+		for _, idx := range keys {
+			result = append(result, symbol[idx])
+		}
+
+		if !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
+		}
+	}
+}
+
+func BenchmarkGetElemSymbolWithExtraWork(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		for _, testcase := range listElementTests {
+		for _, testcase := range elemSymbolTests {
+			getElemSymbolWithExtraWork(testcase.str, testcase.a)
+		}
+	}
+}
+
+func TestGetElemSymbolBySet(t *testing.T) {
+	for _, testcase := range elemSymbolTests {
+		t.Log(testcase.name)
+		symbol := getElemSymbolBySet(testcase.str, testcase.a)
+
+		keys := []int{}
+		for key := range symbol {
+			keys = append(keys, key)
+		}
+		sort.Ints(keys)
+
+		result := []string{}
+		for _, idx := range keys {
+			result = append(result, symbol[idx])
+		}
+
+		if !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
+		}
+	}
+}
+
+func BenchmarkGetElemSymbolBySet(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range elemSymbolTests {
 			getElemSymbolBySet(testcase.str, testcase.a)
 		}
 	}

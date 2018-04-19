@@ -6,50 +6,66 @@ import (
 )
 
 func main() {
-	str := "Hi He Lied Because Boron Could Not Oxidize Fluorine. New Nations Might Also Sign Peace Security Clause. Arthur King Can."
-	a := []int{1, 5, 6, 7, 8, 9, 15, 16, 19}
-	fmt.Printf("%#v\n", getElemSymbol(str, a))
+	text := "Hi He Lied Because Boron Could Not Oxidize Fluorine. New Nations Might Also Sign Peace Security Clause. Arthur King Can."
+	idx := []int{1, 5, 6, 7, 8, 9, 15, 16, 19}
+	fmt.Printf("%#v\n", getElemSymbolWithExtraWork(text, idx))
 }
 
 // getElemSymbol extracts both first and secondary characters from the split word in case of specified index.
 // In other cases, it extracts only first character from the split word.
-func getElemSymbol(s string, index []int) map[int]string {
-	m := make(map[int]string)
-	for i, word := range strings.Split(s, " ") {
-		if isInArray(index, i+1) {
-			m[i+1] = word[:1]
-		} else {
-			m[i+1] = word[:2]
+func getElemSymbol(str string, idxs []int) map[int]string {
+	words := strings.Fields(str)
+	symbol := make(map[int]string, len(words))
+	for i, word := range words {
+		symbol[i+1] = word[:2]
+		if isInArray(idxs, i+1) {
+			symbol[i+1] = word[:1]
 		}
 	}
-	return m
+	return symbol
 }
 
 // isInArray check whether the specified index exists in the slice or not.
-func isInArray(a []int, n int) bool {
-	for _, j := range a {
-		if j == n {
+func isInArray(idxs []int, n int) bool {
+	for _, idx := range idxs {
+		if idx == n {
 			return true
 		}
 	}
 	return false
 }
 
+// getElemSymbolWithExtraWork extracts both first and secondary characters from the split word.
+// Then, it deletes second character from extracted characters in case of specified index.
+func getElemSymbolWithExtraWork(str string, idxs []int) map[int]string {
+	words := strings.Fields(str)
+	symbol := make(map[int]string, len(words))
+	for i, word := range words {
+		symbol[i+1] = word[:2]
+	}
+
+	for _, idx := range idxs {
+		symbol[idx] = symbol[idx][:1]
+	}
+	return symbol
+}
+
+// Just refactor the following code. Self implementation of Set type.
 // https://gist.github.com/c-yan/1b945b04ce246ee53b7229949225eb7c
-func getElemSymbolBySet(s string, index []int) map[string]int {
+func getElemSymbolBySet(str string, index []int) map[int]string {
 	firstOnly := make(map[int]struct{})
 	for _, i := range index {
 		firstOnly[i] = struct{}{}
 	}
-	result := make(map[string]int)
-	for i, w := range strings.Split(s, " ") {
-		var n int
-		if _, ok := firstOnly[i+1]; ok {
-			n = 1
-		} else {
+
+	words := strings.Fields(str)
+	result := make(map[int]string, len(words))
+	for i, w := range words {
+		n := 1
+		if _, ok := firstOnly[i+1]; !ok {
 			n = 2
 		}
-		result[w[:n]] = i + 1
+		result[i+1] = w[:n]
 	}
 	return result
 }
