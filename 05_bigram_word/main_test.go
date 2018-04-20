@@ -32,6 +32,24 @@ var biGramWordTests = []struct {
 	},
 }
 
+func TestBigramWordByCopy(t *testing.T) {
+	for _, testcase := range biGramWordTests {
+		t.Log(testcase.name)
+		if result := bigramWordByCopy(testcase.str); !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
+		}
+	}
+}
+
+func BenchmarkBigramWordByCopy(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range biGramWordTests {
+			bigramWordByCopy(testcase.str)
+		}
+	}
+}
+
 func TestBigramWordByConcat(t *testing.T) {
 	for _, testcase := range biGramWordTests {
 		t.Log(testcase.name)
