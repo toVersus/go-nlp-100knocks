@@ -27,6 +27,24 @@ var biGramCharTests = []struct {
 	},
 }
 
+func TestBiGramCharByConcat(t *testing.T) {
+	for _, testcase := range biGramCharTests {
+		t.Log(testcase.name)
+		if result := biGramCharByConcat(testcase.str); !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
+		}
+	}
+}
+
+func BenchmarkBiGramCharByConcat(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range biGramCharTests {
+			biGramCharByConcat(testcase.str)
+		}
+	}
+}
+
 func TestBiGramChar(t *testing.T) {
 	for _, testcase := range biGramCharTests {
 		t.Log(testcase.name)
