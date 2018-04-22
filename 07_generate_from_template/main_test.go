@@ -34,6 +34,15 @@ func TestSimpleTemplateReporting(t *testing.T) {
 	}
 }
 
+func BenchmarkSimpleTemplateReporting(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range templatingTests {
+			newWeatherReport(testcase.time, testcase.str, testcase.temp)
+		}
+	}
+}
+
 func TestTemplateReporting(t *testing.T) {
 	for _, testcase := range templatingTests {
 		t.Log(testcase.name)
@@ -49,6 +58,20 @@ func TestTemplateReporting(t *testing.T) {
 
 		if result := buf.String(); !reflect.DeepEqual(result, testcase.want) {
 			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.want)
+		}
+	}
+}
+
+func BenchmarkTemplateReporting(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range templatingTests {
+			weather := NewWeather(testcase.time, testcase.str, testcase.temp)
+			tmpl := template.Must(template.New("Report").Parse(Report))
+
+			var buf bytes.Buffer
+			tmpl.Execute(&buf, weather)
+			buf.String()
 		}
 	}
 }
