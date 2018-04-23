@@ -11,17 +11,17 @@ var encryptionTests = []struct {
 	expect string
 }{
 	{
-		name:   "should be encrypted by replacement of lower-case letters",
+		name:   "should encrypt the text by replacing only the lower-case letters",
 		str:    "aTbTcT",
 		expect: "zTyTxT",
 	},
 	{
-		name:   "should NOT be encrypted because input string just contains numbers",
+		name:   "should NOT replace anything while input text contains just a number",
 		str:    "1234",
 		expect: "1234",
 	},
 	{
-		name:   "should NOT be encrypted due to empty input string",
+		name:   "should NOT be encrypted due to empty input text",
 		str:    "",
 		expect: "",
 	},
@@ -36,23 +36,32 @@ func TestEncrypt(t *testing.T) {
 	}
 }
 
+func BenchmarkForge(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range encryptionTests {
+			forge(testcase.str)
+		}
+	}
+}
+
 var decryptionTests = []struct {
 	name   string
 	str    string
 	expect string
 }{
 	{
-		name:   "should be encrypted by replacement of lower-case letters",
+		name:   "should decrypt the decrypted text by replacing only the lower-case letters",
 		str:    "aTbTcT",
 		expect: "aTbTcT",
 	},
 	{
-		name:   "should NOT be encrypted because input string just contains numbers",
+		name:   "should NOT replace anything while input text contains just a number",
 		str:    "1234",
 		expect: "1234",
 	},
 	{
-		name:   "should NOT be encrypted due to empty input string",
+		name:   "should NOT encrypt/decrypt due to the empty input text",
 		str:    "",
 		expect: "",
 	},
@@ -63,15 +72,6 @@ func TestDecrypt(t *testing.T) {
 		t.Log(testcase.name)
 		if result := forge(forge(testcase.str)); !reflect.DeepEqual(result, testcase.expect) {
 			t.Errorf("result => %s\n expect => %s\n", result, testcase.expect)
-		}
-	}
-}
-
-func BenchmarkForge(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, testcase := range encryptionTests {
-			forge(testcase.str)
 		}
 	}
 }
