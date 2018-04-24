@@ -7,27 +7,53 @@ import (
 	"time"
 )
 
+const immutableWordCount = 4
+
 func main() {
 	text := "I couldn't believe that I could actually understand what I was reading : the phenomenal power of the human mind ."
+
 	fmt.Println(typoglycemia(text))
 }
 
-// typoglycemia shuffles the elements of string extracted from the input string separated with a space,
-// except for the first and last characters of the element.
+// typoglycemia shuffles the elements of string except the first and last characters of the element.
 func typoglycemia(s string) string {
+	ss := strings.Fields(s)
+	typoglycemia := make([]string, len(ss))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i, word := range ss {
+		if len(word) <= immutableWordCount {
+			typoglycemia[i] = word
+			continue
+		}
+		// exclude first character
+		b := []byte(word[1:])
+		// exclude last character by specifying the length of b
+		r.Shuffle(len(b)-1, func(i, j int) {
+			b[i], b[j] = b[j], b[i]
+		})
+		typoglycemia[i] = string(word[0]) + string(b)
+	}
+	return strings.Join(typoglycemia, " ")
+}
+
+// typoglycemiaBySelfImplShuffle shuffles the elements of string except the first and last characters of the element
+// by using self implementation of shuffle.
+func typoglycemiaBySelfImplShuffle(s string) string {
 	ss := strings.Fields(s)
 	typoglycemia := make([]string, len(ss))
 	seed := time.Now().UnixNano()
 	for i, word := range ss {
-		if len(word) <= 4 {
+		if len(word) <= immutableWordCount {
 			typoglycemia[i] = word
-		} else {
-			b := []byte(word[1:])
-			shuffle(len(b)-1, seed, func(i, j int) {
-				b[i], b[j] = b[j], b[i]
-			})
-			typoglycemia[i] = string(word[0]) + string(b)
+			continue
 		}
+		// exclude first character
+		b := []byte(word[1:])
+		// exclude last character by specifying the length of b
+		shuffle(len(b)-1, seed, func(i, j int) {
+			b[i], b[j] = b[j], b[i]
+		})
+		typoglycemia[i] = string(word[0]) + string(b)
 	}
 	return strings.Join(typoglycemia, " ")
 }
