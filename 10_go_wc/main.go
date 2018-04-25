@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -18,7 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	count, err := countLine(filePath)
+	count, err := countLineByScanner(filePath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -27,7 +28,7 @@ func main() {
 }
 
 // countLine counts lines of input file text.
-func countLine(path string) (int, error) {
+func countLineByScanner(path string) (int, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return -1, fmt.Errorf("could not open a file: %s\n  %s", path, err)
@@ -39,5 +40,30 @@ func countLine(path string) (int, error) {
 	for sc.Scan() {
 		count++
 	}
+	return count, nil
+}
+
+// countLine counts lines of input file text.
+func countLineByReadLine(path string) (int, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return -1, fmt.Errorf("could not open a file: %s\n  %s", path, err)
+	}
+	defer f.Close()
+
+	r := bufio.NewReader(f)
+	count := 0
+	for {
+		_, _, err := r.ReadLine()
+		if (err != nil) && (err != io.EOF) {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if err == io.EOF {
+			break
+		}
+		count++
+	}
+
 	return count, nil
 }

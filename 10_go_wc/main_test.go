@@ -32,7 +32,7 @@ var countLineTests = []struct {
 	},
 }
 
-func TestCountLine(t *testing.T) {
+func TestCountLineByScanner(t *testing.T) {
 	for _, testcase := range countLineTests {
 		t.Log(testcase.name)
 
@@ -40,9 +40,9 @@ func TestCountLine(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
 		}
-		f.Write([]byte(testcase.content))
+		f.WriteString(testcase.content)
 
-		result, err := countLine(testcase.file)
+		result, err := countLineByScanner(testcase.file)
 		if err != nil {
 			t.Error(err)
 		}
@@ -54,5 +54,44 @@ func TestCountLine(t *testing.T) {
 		if err := os.Remove(testcase.file); err != nil {
 			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
 		}
+	}
+}
+
+func BenchmarkCountLineByScanner(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		countLineByScanner("./hightemp.txt")
+	}
+}
+
+func TestCountLineByReadLine(t *testing.T) {
+	for _, testcase := range countLineTests {
+		t.Log(testcase.name)
+
+		f, err := os.Create(testcase.file)
+		if err != nil {
+			t.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
+		}
+		f.WriteString(testcase.content)
+
+		result, err := countLineByReadLine(testcase.file)
+		if err != nil {
+			t.Error(err)
+		}
+		if !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n expect => %#v", result, testcase.expect)
+		}
+		f.Close()
+
+		if err := os.Remove(testcase.file); err != nil {
+			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
+		}
+	}
+}
+
+func BenchmarkCountLineByReadLine(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		countLineByReadLine("./hightemp.txt")
 	}
 }
