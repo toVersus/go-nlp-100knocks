@@ -16,7 +16,7 @@ var cutTests = []struct {
 	expect    string
 }{
 	{
-		name: "should extract second row of text",
+		name: "should extract second column of text",
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
 3	Lake_Victoria	68,870	2,760
@@ -33,7 +33,7 @@ Lake_Michigan
 `,
 	},
 	{
-		name: "should extract out of row of text",
+		name: "should extract out of column of text",
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
 3	Lake_Victoria	68,870	2,760
@@ -58,6 +58,7 @@ func TestCut(t *testing.T) {
 		src.Close()
 
 		cut(testcase.srcPath, testcase.destPath, testcase.columnNum)
+
 		dest, err := os.Open(testcase.destPath)
 		if err != nil {
 			t.Errorf("could not create a file: %s\n  %s", testcase.destPath, err)

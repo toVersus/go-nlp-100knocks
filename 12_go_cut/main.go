@@ -10,24 +10,23 @@ import (
 
 func main() {
 	var (
-		srcFilePath  string
-		destFilePath string
-		columnNum    int
+		srcPath, destPath string
+		columnNum         int
 	)
-	flag.StringVar(&srcFilePath, "src", "", "specify source file path")
-	flag.StringVar(&srcFilePath, "s", "", "specify source file path")
-	flag.StringVar(&destFilePath, "dest", "./col.txt", "specify output file path")
-	flag.StringVar(&destFilePath, "d", "./col.txt", "specify output file path")
+	flag.StringVar(&srcPath, "src", "", "specify source file path")
+	flag.StringVar(&srcPath, "s", "", "specify source file path")
+	flag.StringVar(&destPath, "dest", "./col.txt", "specify output file path")
+	flag.StringVar(&destPath, "d", "./col.txt", "specify output file path")
 	flag.IntVar(&columnNum, "n", 1, "specify a n-th column to be extracted")
 
 	flag.Parse()
 
-	if _, err := os.Stat(srcFilePath); err != nil {
-		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", srcFilePath, err)
+	if _, err := os.Stat(srcPath); err != nil {
+		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", srcPath, err)
 		os.Exit(1)
 	}
 
-	cut(srcFilePath, destFilePath, columnNum)
+	cut(srcPath, destPath, columnNum)
 }
 
 // cut extracts the portion of text from a file by selecting rows and write down into a new file.
@@ -42,6 +41,8 @@ func cut(srcPath string, destPath string, columnNum int) {
 
 	sc := bufio.NewScanner(src)
 	w := bufio.NewWriter(dest)
+	defer w.Flush()
+
 	i := 0
 	for sc.Scan() {
 		ss := strings.Fields(strings.Replace(sc.Text(), "\t", " ", -1))
@@ -52,5 +53,4 @@ func cut(srcPath string, destPath string, columnNum int) {
 		}
 		i++
 	}
-	w.Flush()
 }
