@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -23,15 +24,18 @@ func main() {
 	flag.Parse()
 
 	if _, err := os.Stat(filePath1); err != nil {
-		fmt.Printf("could not find a file: %s\n  %s\n", filePath1, err)
+		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath1, err)
 		os.Exit(1)
 	}
 	if _, err := os.Stat(filePath2); err != nil {
-		fmt.Printf("could not find a file: %s\n  %s\n", filePath2, err)
+		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath2, err)
 		os.Exit(1)
 	}
 
-	pasteByChannel(filePath1, filePath2, destFilePath)
+	if err := pasteByChannel(filePath1, filePath2, destFilePath); err != nil {
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 // pasteByChannel writes lines consisting of the sequentially corresponding lines from each file,
@@ -67,4 +71,41 @@ func pasteByChannel(file1 string, file2 string, dest string) error {
 		}
 		fmt.Fprint(w, str1, "\t", str2, "\n")
 	}
+}
+
+// paste reads the line of each file and creates a new file by concatenating them with tab-delimited.
+func paste(filePath1 string, filePath2 string, destPath string) error {
+	f1, _ := os.Open(filePath1)
+	defer f1.Close()
+	f2, _ := os.Open(filePath2)
+	defer f2.Close()
+
+	destFile, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("cannot create a file: %s\n  %s", destPath, err)
+	}
+	defer destFile.Close()
+
+	r1, r2 := bufio.NewReader(f1), bufio.NewReader(f2)
+	w := bufio.NewWriter(destFile)
+	defer w.Flush()
+	for {
+		line1, _, err := r1.ReadLine()
+		if (err != nil) && (err != io.EOF) {
+			return err
+		}
+		if err == io.EOF {
+			break
+		}
+
+		line2, _, err := r2.ReadLine()
+		if (err != nil) && (err != io.EOF) {
+			return err
+		}
+		if err == io.EOF {
+			break
+		}
+		fmt.Fprint(w, string(line1), "\t", string(line2), "\n")
+	}
+	return nil
 }

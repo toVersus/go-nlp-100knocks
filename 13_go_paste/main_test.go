@@ -58,7 +58,10 @@ func TestPasteByChannel(t *testing.T) {
 		file2.WriteString(testcase.text2)
 		file2.Close()
 
-		pasteByChannel(testcase.file1, testcase.file2, testcase.dest)
+		if err := paste(testcase.file1, testcase.file2, testcase.dest); err != nil {
+			t.Error(err)
+		}
+
 		dest, err := os.Open(testcase.dest)
 		if err != nil {
 			t.Errorf("could not create a file: %s\n  %s", testcase.dest, err)
