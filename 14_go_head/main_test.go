@@ -9,7 +9,7 @@ import (
 
 var headTests = []struct {
 	name   string
-	file   string
+	src    string
 	text   string
 	n      int
 	dest   string
@@ -17,7 +17,7 @@ var headTests = []struct {
 }{
 	{
 		name: "should print the first 3 lines of input file",
-		file: "./test.txt",
+		src:  "./test.txt",
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
 3	Lake_Victoria	68,870	2,760
@@ -30,28 +30,43 @@ var headTests = []struct {
 3	Lake_Victoria	68,870	2,760
 `,
 	},
+	{
+		name:   "should not print anything due to the empty file",
+		src:    "./empty-test.txt",
+		text:   "",
+		n:      3,
+		dest:   "./result.txt",
+		expect: "",
+	},
 }
 
 func TestHead(t *testing.T) {
 	for _, testcase := range headTests {
 		t.Log(testcase.name)
 
-		f, err := os.Create(testcase.file)
+		f, err := os.Create(testcase.src)
 		if err != nil {
-			t.Errorf("could not create a new file: %s\n", err)
+			t.Errorf("could not create a new file: %s\n  %s", testcase.src, err)
 		}
-		f.Write([]byte(testcase.text))
+		f.WriteString(testcase.text)
 		f.Close()
 
-		dest, _ := os.Create(testcase.dest)
-		if err := head(testcase.file, testcase.n, *dest); err != nil {
+		dest, err := os.Create(testcase.dest)
+		if err != nil {
+			t.Errorf("could not create a new file: %s\n  %s", testcase.dest, err)
+		}
+		if err := head(testcase.src, testcase.n, *dest); err != nil {
 			t.Error(err)
 		}
 		dest.Close()
 
-		dest, _ = os.Open(testcase.dest)
+		dest, err = os.Open(testcase.dest)
+		if err != nil {
+			t.Errorf("could not open a file: %s\n  %s", testcase.dest, err)
+		}
+
 		sc := bufio.NewScanner(dest)
-		var result string
+		result := ""
 		for sc.Scan() {
 			result += sc.Text() + "\n"
 		}
@@ -61,8 +76,8 @@ func TestHead(t *testing.T) {
 			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
 		}
 
-		if err := os.Remove(testcase.file); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
+		if err := os.Remove(testcase.src); err != nil {
+			t.Errorf("could not delete a file: %s\n  %s\n", testcase.src, err)
 		}
 		if err := os.Remove(testcase.dest); err != nil {
 			t.Errorf("could not delete a file: %s\n  %s\n", testcase.dest, err)

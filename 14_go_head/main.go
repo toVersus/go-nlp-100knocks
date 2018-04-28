@@ -19,6 +19,11 @@ func main() {
 	flag.IntVar(&lineNum, "n", 1, "specify the first numbers of line")
 	flag.Parse()
 
+	if _, err := os.Stat(filePath); err != nil {
+		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath, err)
+		os.Exit(1)
+	}
+
 	if err := head(filePath, lineNum, *os.Stdout); err != nil {
 		fmt.Printf("could not read the n lines of text: %s\n", err)
 	}
