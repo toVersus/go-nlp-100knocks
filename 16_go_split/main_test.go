@@ -19,7 +19,7 @@ var splitTests = []struct {
 }{
 	{
 		name:  "should split a 5-lines file into 10 pieces",
-		file:  "./test.txt",
+		file:  "./overcommit-test.txt",
 		nFile: 10,
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
@@ -100,18 +100,15 @@ func TestSplit(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
 		}
-
-		f.Write([]byte(testcase.text))
+		f.WriteString(testcase.text)
 		f.Close()
 
 		if err := split(testcase.file, testcase.nFile); err != nil {
 			t.Errorf("could not split a file into pieces: %s\n", err)
 		}
 
-		var (
-			buf      []byte
-			fileName string
-		)
+		var buf []byte
+		var fileName string
 		fds := make([]*os.File, testcase.nFile)
 		ext := filepath.Ext(testcase.file)
 		for i := 0; i < testcase.nFile; i++ {
