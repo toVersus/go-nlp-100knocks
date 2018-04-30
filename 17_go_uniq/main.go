@@ -25,12 +25,13 @@ func main() {
 	}
 
 	if rowNum < 1 {
-		fmt.Println("please specify a positive number")
+		fmt.Fprint(os.Stderr, "please specify a positive number")
 		os.Exit(1)
 	}
 
 	if err := uniq(filePath, rowNum, *os.Stdout); err != nil {
-		fmt.Printf("could not filter repeated lines: %s\n", err)
+		fmt.Fprint(os.Stderr, "could not filter repeated lines: ", err)
+		os.Exit(1)
 	}
 
 }
@@ -64,8 +65,8 @@ func (item Item) Contains(s string) bool {
 func (item Item) Strings() []string {
 	ss := make([]string, 0, len(item))
 
-	for elem := range item {
-		ss = append(ss, fmt.Sprintf("%s", elem))
+	for key := range item {
+		ss = append(ss, fmt.Sprintf("%s", key))
 	}
 	return ss
 }
@@ -89,7 +90,7 @@ func (item Item) Union(other Item) Set {
 func uniq(path string, rowNum int, file os.File) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open a file: %s\n  %s", path, err)
 	}
 	defer f.Close()
 
@@ -104,8 +105,8 @@ func uniq(path string, rowNum int, file os.File) error {
 	}
 
 	w := bufio.NewWriter(&file)
-	for _, item := range items.Strings() {
-		fmt.Fprintf(w, "%s\n", item)
+	for _, key := range items.Strings() {
+		fmt.Fprintf(w, "%s\n", key)
 	}
 	w.Flush()
 

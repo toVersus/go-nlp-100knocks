@@ -8,7 +8,7 @@ import (
 
 var uniqTests = []struct {
 	name   string
-	file   string
+	src    string
 	nRow   int
 	text   string
 	dest   string
@@ -16,7 +16,7 @@ var uniqTests = []struct {
 }{
 	{
 		name: "should filter repeated lines of first colum in a file",
-		file: "./test.txt",
+		src:  "./test.txt",
 		nRow: 1,
 		text: `高知県	江川崎	41	2013-08-12
 埼玉県	熊谷	40.9	2007-08-16
@@ -58,7 +58,7 @@ var uniqTests = []struct {
 	},
 	{
 		name: "should print lines of second colum in a file without any need to filter",
-		file: "./test.txt",
+		src:  "./test.txt",
 		nRow: 2,
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
@@ -74,7 +74,7 @@ var uniqTests = []struct {
 	},
 	{
 		name: "should return empty string while input nRow is over the length of rows on a file",
-		file: "./test.txt",
+		src:  "./test.txt",
 		nRow: 10,
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
@@ -90,21 +90,29 @@ func TestUniq(t *testing.T) {
 	for _, testcase := range uniqTests {
 		t.Log(testcase.name)
 
-		f, err := os.Create(testcase.file)
+		f, err := os.Create(testcase.src)
 		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
+			t.Errorf("could not create a file: %s\n  %s\n", testcase.src, err)
 		}
 
-		f.Write([]byte(testcase.text))
+		f.WriteString(testcase.text)
 		f.Close()
 
-		dest, _ := os.Create(testcase.dest)
-		if err = uniq(testcase.file, testcase.nRow, *dest); err != nil {
-			t.Errorf("could not filter a line in specified file: %s\n  %s\n", testcase.file, err)
+		dest, err := os.Create(testcase.dest)
+		if err != nil {
+			t.Errorf("could not create a file: %s\n  %s\n", testcase.dest, err)
+		}
+
+		if err = uniq(testcase.src, testcase.nRow, *dest); err != nil {
+			t.Errorf("could not filter a line in specified file: %s\n  %s\n", testcase.src, err)
 		}
 		dest.Close()
 
-		dest, _ = os.Open(testcase.dest)
+		dest, err = os.Open(testcase.dest)
+		if err != nil {
+			t.Errorf("could not open a file: %s\n  %s\n", testcase.dest, err)
+		}
+
 		sc := bufio.NewScanner(dest)
 		result := Item{}
 		for sc.Scan() {
@@ -118,8 +126,8 @@ func TestUniq(t *testing.T) {
 			}
 		}
 
-		if err := os.Remove(testcase.file); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
+		if err := os.Remove(testcase.src); err != nil {
+			t.Errorf("could not delete a file: %s\n  %s\n", testcase.src, err)
 		}
 		if err := os.Remove(testcase.dest); err != nil {
 			t.Errorf("could not delete a file: %s\n  %s\n", testcase.dest, err)
