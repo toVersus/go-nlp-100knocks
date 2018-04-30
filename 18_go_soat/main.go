@@ -36,41 +36,39 @@ func main() {
 	}
 }
 
-// Record represents scheme of data structure
-type Record struct {
-	Pref string
-	City string
-	Temp float64
-	Date string
+// highTemp represents the details on high temperature in Japan
+type highTemp struct {
+	pref  string
+	city  string
+	value float64
+	date  string
 }
 
-// Table represents compound record
-type Table []Record
+type highTempMap []highTemp
 
-// NewTable returns a new table reading from specified file
-func NewTable(fp *os.File) Table {
+func newHighTempMap(fp *os.File) highTempMap {
 	var (
-		fields []string
-		table  Table
-		temp   float64
+		fields  []string
+		tempMap highTempMap
+		temp    float64
 	)
 	sc := bufio.NewScanner(fp)
 	for sc.Scan() {
 		fields = strings.Fields(strings.Replace(sc.Text(), "\t", " ", -1))
 		temp, _ = strconv.ParseFloat(fields[2], 64)
-		table = append(table, Record{
-			fields[0], fields[1], temp, fields[3],
+		tempMap = append(tempMap, highTemp{
+			pref: fields[0], city: fields[1], value: temp, date: fields[3],
 		})
 	}
-	return table
+	return tempMap
 }
 
-// String concatenates and outputs each element of table
-func (r Record) String() string {
-	return fmt.Sprintf("%s\t%s\t%g\t%s", r.Pref, r.City, r.Temp, r.Date)
+// String concatenates and outputs each element of high temperature map
+func (ht *highTemp) String() string {
+	return fmt.Sprintf("%s\t%s\t%g\t%s", ht.pref, ht.city, ht.value, ht.date)
 }
 
-// Sort sorts the lines of a text in ascending order by specified column
+// Sort sorts the high temperature map in stable order as well as in ascending order.
 func Sort(path string, columnNum int, file *os.File) error {
 	f, err := os.Open(path)
 	if err != nil {
@@ -78,21 +76,21 @@ func Sort(path string, columnNum int, file *os.File) error {
 	}
 	defer f.Close()
 
-	table := NewTable(f)
+	tempMap := newHighTempMap(f)
 
 	comparators := []func(int, int) bool{
-		func(i, j int) bool { return table[i].Pref > table[j].Pref },
-		func(i, j int) bool { return table[i].City > table[j].City },
-		func(i, j int) bool { return table[i].Temp > table[j].Temp },
-		func(i, j int) bool { return table[i].Date > table[j].Date },
+		func(i, j int) bool { return tempMap[i].pref > tempMap[j].pref },
+		func(i, j int) bool { return tempMap[i].city > tempMap[j].city },
+		func(i, j int) bool { return tempMap[i].value > tempMap[j].value },
+		func(i, j int) bool { return tempMap[i].date > tempMap[j].date },
 	}
-	sort.SliceStable(table, comparators[columnNum-1])
+	sort.SliceStable(tempMap, comparators[columnNum-1])
 
 	w := bufio.NewWriter(file)
 	defer w.Flush()
-	for i, t := range table {
+	for i, t := range tempMap {
 		fmt.Fprint(w, t.String())
-		if i == len(table)-1 {
+		if i == len(tempMap)-1 {
 			break
 		}
 		fmt.Fprintln(w, "")
