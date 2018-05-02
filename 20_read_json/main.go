@@ -16,7 +16,7 @@ type Article struct {
 	Text  string `json:"text"`
 }
 
-// NewArticle is a constructer of Article.
+// newArticle is a constructer of Article.
 func newArticle(a Article) Article {
 	return Article{a.Title, a.Text}
 }
@@ -50,16 +50,8 @@ func main() {
 	}
 }
 
-// readJSON reads and parse the json file and returns Articles
+// readJSON reads/parses the json file and initiates Articles instance
 func readJSON(path string) (Articles, error) {
-	var (
-		buf      []byte
-		article  Article
-		articles Articles
-		readErr  error
-		err      error
-	)
-
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("could not open a file specified: %s\n  %s", path, err)
@@ -67,12 +59,12 @@ func readJSON(path string) (Articles, error) {
 	defer f.Close()
 
 	reader := bufio.NewReader(f)
+	article, articles := Article{}, Articles{}
 	for {
-		buf, readErr = reader.ReadBytes('\n')
+		buf, readErr := reader.ReadBytes('\n')
 		if (readErr != nil) && (readErr != io.EOF) {
 			return nil, fmt.Errorf("could not read a file content: %s", readErr)
 		}
-
 		if err = json.Unmarshal(buf, &article); err != nil {
 			fmt.Printf("could not parse json file: %s", err)
 			break
@@ -88,7 +80,7 @@ func readJSON(path string) (Articles, error) {
 	return articles, nil
 }
 
-// Find returns filetered Articles by input string
+// find returns Articles filtered by specified keyword.
 func (articles Articles) find(keyword string) Articles {
 	var filtered Articles
 	for _, a := range articles {
