@@ -34,14 +34,24 @@ func main() {
 	flag.StringVar(&keyword, "key", "", "specify a keyword for filtering a wiki page")
 	flag.Parse()
 
-	results := readJSON(filePath).find(keyword)
-	for _, result := range results {
-		fmt.Println(result.Text)
+	if _, err := os.Stat(filePath); err != nil {
+		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath, err)
+		os.Exit(1)
+	}
+
+	filtered, err := readJSON(filePath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	for _, a := range filtered.find(keyword) {
+		fmt.Println(a.Text)
 	}
 }
 
 // readJSON reads and parse the json file and returns Articles
-func readJSON(path string) Articles {
+func readJSON(path string) (Articles, error) {
 	var (
 		buf      []byte
 		article  Article
@@ -50,21 +60,21 @@ func readJSON(path string) Articles {
 		err      error
 	)
 
-	file, err := os.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
-		fmt.Printf("could not open a file specified: %s\n  %s\n", path, err)
+		return nil, fmt.Errorf("could not open a file specified: %s\n  %s", path, err)
 	}
-	defer file.Close()
+	defer f.Close()
 
-	reader := bufio.NewReader(file)
+	reader := bufio.NewReader(f)
 	for {
 		buf, readErr = reader.ReadBytes('\n')
 		if (readErr != nil) && (readErr != io.EOF) {
-			panic(err)
+			return nil, fmt.Errorf("could not read a file content: %s", readErr)
 		}
 
 		if err = json.Unmarshal(buf, &article); err != nil {
-			fmt.Print("could not parse json file.")
+			fmt.Printf("could not parse json file: %s", err)
 			break
 		}
 
@@ -74,7 +84,8 @@ func readJSON(path string) Articles {
 			break
 		}
 	}
-	return articles
+
+	return articles, nil
 }
 
 // Find returns filetered Articles by input string
