@@ -15,7 +15,7 @@ var selectCategoryTests = []struct {
 }{
 	{
 		name: "should return 5 categolized lines",
-		file: "test.txt",
+		file: "simple-test.txt",
 		text: `{"text": "インドです。\nイギリスに関係します。\n[[Category:インド|*]]\n[[Category:イギリス連邦]]", "title":"インド"}
 {"text": "イギリスです。\n[[Category:イギリス|*]]\n[[Category:英連邦王国|*]]\n[[Category:海洋国家]]", "title":"イギリス"}`,
 		keyword: "イギリス",
@@ -27,7 +27,7 @@ var selectCategoryTests = []struct {
 	},
 	{
 		name:    "should return empty categories",
-		file:    "test.txt",
+		file:    "empty-test.txt",
 		text:    `{"text": "インドです。\nイギリスに関係します。\n[[Category:Category:]]\n[[Category: [[Sub Category]]]]\n[[Category:インド|*]]\n[[Category:イギリス連邦]][[foobar]]\n[[Category:連邦]]]]", "title":"インド"}`,
 		keyword: "イギリス",
 		expect:  nil,
@@ -56,6 +56,32 @@ func TestSelectCategory(t *testing.T) {
 
 		if err := os.Remove(testcase.file); err != nil {
 			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
+		}
+	}
+}
+
+func BenchmarkSelectCategory(b *testing.B) {
+	for _, testcase := range selectCategoryTests {
+		f, err := os.Create(testcase.file)
+		if err != nil {
+			b.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
+		}
+		f.WriteString(testcase.text)
+		f.Close()
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range selectCategoryTests {
+			filtered, _ := readJSON(testcase.file)
+			filtered.find(testcase.keyword).selectCategory()
+		}
+	}
+	b.StopTimer()
+
+	for _, testcase := range selectCategoryTests {
+		if err := os.Remove(testcase.file); err != nil {
+			b.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
 		}
 	}
 }

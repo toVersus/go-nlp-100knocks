@@ -38,11 +38,6 @@ type Article struct {
 	Text  string `json:"text"`
 }
 
-// newArticle is a constructer of Article.
-func newArticle(a Article) Article {
-	return Article{a.Title, a.Text}
-}
-
 // Articles represents the slice of Article.
 type Articles []Article
 
