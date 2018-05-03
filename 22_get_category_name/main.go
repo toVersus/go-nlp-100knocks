@@ -82,21 +82,14 @@ func (articles Articles) find(keyword string) Articles {
 	return filtered
 }
 
-var (
-	reg          = regexp.MustCompile(`\[\[Category:[^]]+\]\]`)
-	prefixTagReg = regexp.MustCompile(`\[\[Category:`)
-	suffixTagReg = regexp.MustCompile(`(\|?\s?\*?[1..10]?]])`)
-)
+var reg = regexp.MustCompile(`\[\[Category:([^|]]+)(?:|.+)?\]\]`)
 
 // getCategoryName returns strings containing the Category name declared in the line
 func (articles Articles) getCategoryName() []string {
 	selected := []string{}
-	prefixTagCount, suffixTagCount := 0, 0
 	for _, a := range articles {
-		for _, line := range reg.FindAllString(a.Text, -1) {
-			prefixTagCount = len(prefixTagReg.FindString(line))
-			suffixTagCount = len(line) - len(suffixTagReg.FindString(line))
-			selected = append(selected, line[prefixTagCount:suffixTagCount])
+		for _, line := range reg.FindAllStringSubmatch(a.Text, -1) {
+			selected = append(selected, line[1])
 		}
 	}
 	return selected

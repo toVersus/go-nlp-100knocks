@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var selectCategoryNameTest = []struct {
+var getCategoryNameTest = []struct {
 	name    string
 	file    string
 	text    string
@@ -20,15 +20,15 @@ var selectCategoryNameTest = []struct {
 {"text": "イギリスです。\n[[Category:イギリス|イギリス]]\n[[Category:英連邦王国|*]]\n[[Category:海洋国家]]", "title":"イギリス"}`,
 		keyword: "イギリス",
 		expect: []string{
-			"イギリス|イギリス",
+			"イギリス",
 			"英連邦王国",
 			"海洋国家",
 		},
 	},
 }
 
-func TestSelectCategolizedLine(t *testing.T) {
-	for _, testcase := range selectCategoryNameTest {
+func TestGetCategoryName(t *testing.T) {
+	for _, testcase := range getCategoryNameTest {
 		t.Log(testcase.name)
 
 		f, err := os.Create(testcase.file)
@@ -51,6 +51,35 @@ func TestSelectCategolizedLine(t *testing.T) {
 
 		if err := os.Remove(testcase.file); err != nil {
 			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
+		}
+	}
+}
+
+func BenchmarkGetCategoryName(b *testing.B) {
+	for _, testcase := range getCategoryNameTest {
+		f, err := os.Create(testcase.file)
+		if err != nil {
+			b.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
+		}
+		f.Write([]byte(testcase.text))
+		f.Close()
+	}
+
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range getCategoryNameTest {
+			articles, err := readJSON(testcase.file)
+			if err != nil {
+				b.Error(err)
+			}
+
+			articles.find(testcase.keyword).getCategoryName()
+
+		}
+	}
+
+	for _, testcase := range getCategoryNameTest {
+		if err := os.Remove(testcase.file); err != nil {
+			b.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
 		}
 	}
 }
