@@ -38,7 +38,7 @@ type Article struct {
 // Articles represents the slice of Article.
 type Articles []Article
 
-// readJSON reads/parses the json file and initiates Articles instance
+// readJSON reads/parses the json file and initiates Articles instance.
 func readJSON(path string) (Articles, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -78,21 +78,19 @@ func (articles Articles) find(keyword string) Articles {
 	return filtered
 }
 
-var mediaTagReg = regexp.MustCompile(`\[\[(file|ファイル)\:[^:]+?\|`)
-var prefixMediaTag = regexp.MustCompile(`\[\[(file|ファイル)\:`)
+// catches the following two cases and only returns the file name
+// by removing the unnecessary information such as file size, extension and thumbnail
+//   [[file:<media file details>]]
+//   [[ファイル:<media file details>]]
+var mediaFileReg = regexp.MustCompile(`\[\[(?:file|ファイル):([^|]+)(?:|.+)?\]\]`)
 
-// extractMediaFile returns reffered media files in the Article.
+// extractMediaFile returns reffered media file names in the Article.
 func (articles Articles) extractMediaFile() []string {
-	var (
-		refs              []string
-		prefixMediaTagLen int
-	)
+	var refs []string
 	for _, a := range articles {
-		for _, line := range mediaTagReg.FindAllString(a.Text, -1) {
-			prefixMediaTagLen = len(prefixMediaTag.FindString(line))
-			refs = append(refs, line[prefixMediaTagLen:len(line)-1])
+		for _, line := range mediaFileReg.FindAllStringSubmatch(a.Text, -1) {
+			refs = append(refs, line[1])
 		}
 	}
-
 	return refs
 }
