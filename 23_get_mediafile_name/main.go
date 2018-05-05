@@ -26,7 +26,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Printf("%#v\n", articles.find(keyword).extractMediaFile())
+	fmt.Printf("%#v\n", articles.find(keyword).getMediaFileName())
 }
 
 // Article represents the body of Wiki page and its Title.
@@ -84,8 +84,8 @@ func (articles Articles) find(keyword string) Articles {
 //   [[ファイル:<media file details>]]
 var mediaFileReg = regexp.MustCompile(`\[\[(?:file|ファイル):([^|]+)(?:|.+)?\]\]`)
 
-// extractMediaFile returns reffered media file names in the Article.
-func (articles Articles) extractMediaFile() []string {
+// getMediaFileName returns reffered media file names in the Article.
+func (articles Articles) getMediaFileName() []string {
 	var refs []string
 	for _, a := range articles {
 		for _, line := range mediaFileReg.FindAllStringSubmatch(a.Text, -1) {

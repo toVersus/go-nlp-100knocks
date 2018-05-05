@@ -50,7 +50,7 @@ func TestExtractMediaFile(t *testing.T) {
 			t.Error(err)
 		}
 
-		results := artists.find(testcase.keyword).extractMediaFile()
+		results := artists.find(testcase.keyword).getMediaFileName()
 		if !reflect.DeepEqual(results, testcase.expect) {
 			t.Errorf("result => %#v\n shpould contain => %#v\n", results, testcase.expect)
 		}
@@ -77,7 +77,7 @@ func BenchmarkExtractMediaFile(b *testing.B) {
 			if err != nil {
 				b.Error(err)
 			}
-			articles.find(testcase.keyword).extractMediaFile()
+			articles.find(testcase.keyword).getMediaFileName()
 		}
 	}
 
