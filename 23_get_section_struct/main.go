@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -27,10 +28,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	results := articles.find(keyword).getSection()
-	for _, result := range results {
-		fmt.Printf("%#v\n", result.Name)
-	}
+	result := articles.find(keyword).getSection()
+	fmt.Println(result.String())
 }
 
 // Article represents the body of Wiki page and its Title.
@@ -42,19 +41,22 @@ type Article struct {
 // Articles represents the slice of Article.
 type Articles []Article
 
-// Section represents section structure of the Article
+// section represents section structure of the Article
 // == hoge == -> name: hoge, level: 1
-type Section struct {
-	Name  string
-	Level int
+type section struct {
+	name  string
+	level int
 }
 
-// Sections represents slice of Section
-type Sections []Section
+// sections represents slice of Section
+type sections []section
 
-// Add adds section structure
-func (ss Sections) Add(name string, level int) Sections {
-	return append(ss, Section{name, level})
+func (secs sections) String() string {
+	var buf bytes.Buffer
+	for _, sec := range secs {
+		buf.WriteString(strings.Trim(fmt.Sprintf("%+v\n", sec), "{}"))
+	}
+	return strings.TrimRight(buf.String(), "\n")
 }
 
 // readJSON reads/parses the json file and initiates Articles instance
@@ -97,23 +99,20 @@ func (articles Articles) find(keyword string) Articles {
 	return filtered
 }
 
-var reg = regexp.MustCompile(`\=(\=+)( +)(.*)( +)(\=+)\=`)
-var sectionLevelReg = regexp.MustCompile(`\=(\=+)( +)`)
+var secStructReg = regexp.MustCompile(`(?:=)(=+)([^=]+)(?:=+)`)
 
 // getSection reads out the section structure of the Articles
-func (articles Articles) getSection() Sections {
-	var (
-		sections Sections
-		name     string
-		level    int
-	)
-
+func (articles Articles) getSection() sections {
+	var secs sections
 	for _, a := range articles {
-		for _, line := range reg.FindAllString(a.Text, -1) {
-			level = len(sectionLevelReg.FindString(line))
-			name = line[level : len(line)-level]
-			sections = sections.Add(name, level-2) // "== " -> section: 1
+		for _, line := range secStructReg.FindAllStringSubmatch(a.Text, -1) {
+			// Capture the following items:
+			//   []string{"===<section name>===", "===", "<section name>"}
+			secs = append(secs, section{
+				name:  line[2],
+				level: len(line[1])}, // "==" -> section: 1
+			)
 		}
 	}
-	return sections
+	return secs
 }
