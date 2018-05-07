@@ -80,25 +80,15 @@ func (articles Articles) find(keyword string) Articles {
 	return filtered
 }
 
-var templateTagReg = regexp.MustCompile(`{{基礎情報 国[\s\S]*?\n}}`)
-var sectionSeparatorReg = regexp.MustCompile(`(\|)+?.*(=).*(|)+?`)
-var keyValueSeparatorReg = regexp.MustCompile(`(\s)?=(\s)?`)
+var templateFieldReg = regexp.MustCompile(`(?:|\s)([^|]+)(?:\s=\s)(.+)(?:\n?|)`)
 
-// selectTemplate returns
+// selectTemplate returns key value pair of template
 func (articles Articles) selectTemplate() map[string]string {
-	var sep string
-	var keyValuePair []string
 	dict := make(map[string]string)
-
 	for _, a := range articles {
-		for _, line := range templateTagReg.FindAllString(a.Text, -1) {
-			for _, text := range sectionSeparatorReg.FindAllString(line, -1) {
-				sep = keyValueSeparatorReg.FindString(text)
-				keyValuePair = strings.Split(text[1:], sep)
-				dict[keyValuePair[0]] = keyValuePair[1]
-			}
+		for _, line := range templateFieldReg.FindAllStringSubmatch(a.Text, -1) {
+			dict[line[1]] = strings.TrimRight(line[2], "\n")
 		}
 	}
-
 	return dict
 }
