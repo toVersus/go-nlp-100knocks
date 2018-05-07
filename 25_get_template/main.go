@@ -87,7 +87,7 @@ func (articles Articles) selectTemplate() map[string]string {
 	dict := make(map[string]string)
 	for _, a := range articles {
 		for _, line := range templateFieldReg.FindAllStringSubmatch(a.Text, -1) {
-			dict[line[1]] = strings.TrimRight(line[2], "\n")
+			dict[line[1]] = line[2]
 		}
 	}
 	return dict
