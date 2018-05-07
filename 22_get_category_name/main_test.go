@@ -35,7 +35,7 @@ func TestGetCategoryName(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
 		}
-		f.Write([]byte(testcase.text))
+		f.WriteString(testcase.text)
 		f.Close()
 
 		articles, err := readJSON(testcase.file)
@@ -61,7 +61,7 @@ func BenchmarkGetCategoryName(b *testing.B) {
 		if err != nil {
 			b.Errorf("could not create a file: %s\n  %s\n", testcase.file, err)
 		}
-		f.Write([]byte(testcase.text))
+		f.WriteString(testcase.text)
 		f.Close()
 	}
 
