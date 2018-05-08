@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	results := articles.find(keyword).selectTemplate()
+	results := articles.find(keyword).getTemplate()
 	fmt.Printf("%#v\n", results)
 }
 
@@ -82,8 +82,8 @@ func (articles Articles) find(keyword string) Articles {
 
 var templateFieldReg = regexp.MustCompile(`(?:|\s)([^|]+)(?:\s=\s)(.+)(?:\n?|)`)
 
-// selectTemplate returns key value pair of template
-func (articles Articles) selectTemplate() map[string]string {
+// getTemplate returns key value pair of template
+func (articles Articles) getTemplate() map[string]string {
 	dict := make(map[string]string)
 	for _, a := range articles {
 		for _, line := range templateFieldReg.FindAllStringSubmatch(a.Text, -1) {
