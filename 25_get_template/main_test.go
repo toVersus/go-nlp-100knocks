@@ -128,4 +128,10 @@ func BenchmarkSelectTemplate(b *testing.B) {
 			articles.find(testcase.keyword).selectTemplate()
 		}
 	}
+
+	for _, testcase := range selectTemplateTests {
+		if err := os.Remove(testcase.file); err != nil {
+			b.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
+		}
+	}
 }
