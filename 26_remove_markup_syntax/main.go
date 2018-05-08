@@ -80,27 +80,17 @@ func (articles Articles) find(keyword string) Articles {
 	return filtered
 }
 
-var templateTagReg = regexp.MustCompile(`{{基礎情報 国[\s\S]*?\n}}`)
-var sectionSeparatorReg = regexp.MustCompile(`(\|)+?.*(=).*(|)+?`)
-var keyValueSeparatorReg = regexp.MustCompile(`(\s)?=(\s)?`)
-var emphaticStyleReg = regexp.MustCompile(`'{2,5}`)
+var templateFieldReg = regexp.MustCompile(`(?:|\s)([^|]+)(?:\s=\s)(.+)(?:\n?|)`)
+var markupSyntaxReg = regexp.MustCompile(`'{2,5}`)
 
-// getTemplate returns name and value of template field removing emphatic style.
+// getTemplate returns key value pair of template by removing emphatic style.
 func (articles Articles) getTemplate() map[string]string {
-	var sep string
-	var keyValuePair []string
 	dict := make(map[string]string)
-
 	for _, a := range articles {
-		for _, line := range templateTagReg.FindAllString(a.Text, -1) {
-			for _, text := range sectionSeparatorReg.FindAllString(line, -1) {
-				sep = keyValueSeparatorReg.FindString(text)
-				keyValuePair = strings.Split(text[1:], sep)
-
-				// Remove emphatic style (Italics, bold, and both) symbols.
-				// https://en.wikipedia.org/wiki/Help:Cheatsheet
-				dict[keyValuePair[0]] = emphaticStyleReg.ReplaceAllString(keyValuePair[1], "")
-			}
+		for _, line := range templateFieldReg.FindAllStringSubmatch(a.Text, -1) {
+			// Remove emphatic style (Italics, bold, and both) symbols.
+			// https://en.wikipedia.org/wiki/Help:Cheatsheet
+			dict[line[1]] = markupSyntaxReg.ReplaceAllString(line[2], "")
 		}
 	}
 	return dict
