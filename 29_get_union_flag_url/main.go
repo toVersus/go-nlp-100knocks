@@ -126,24 +126,15 @@ func (articles Articles) find(keyword string) Articles {
 	return filtered
 }
 
-var templateTagReg = regexp.MustCompile(`{{基礎情報 国[\s\S]*?\n}}`)
-var sectionSeparatorReg = regexp.MustCompile(`(\|)+?.*(=).*(|)+?`)
-var keyValueSeparatorReg = regexp.MustCompile(`(\s)?=(\s)?`)
+var templateFieldReg = regexp.MustCompile(`(?:|\s)([^|]+)(?:\s=\s)(.+)(?:\n?|)`)
 
 // getUnionFlagInfo sends the GET request to the endpoint of Media Wiki API
-// specifing the title of union flag image and returns the json response.
+// by specifing the title of union flag image and receive the json response.
 func (articles Articles) getUnionFlagURL() (*MediaWikiResponse, error) {
-	var sep string
-	var keyValuePair []string
 	dict := make(map[string]string)
-
 	for _, a := range articles {
-		for _, line := range templateTagReg.FindAllString(a.Text, -1) {
-			for _, text := range sectionSeparatorReg.FindAllString(line, -1) {
-				sep = keyValueSeparatorReg.FindString(text)
-				keyValuePair = strings.Split(text[1:], sep)
-				dict[keyValuePair[0]] = keyValuePair[1]
-			}
+		for _, line := range templateFieldReg.FindAllStringSubmatch(a.Text, -1) {
+			dict[line[1]] = line[2]
 		}
 	}
 
