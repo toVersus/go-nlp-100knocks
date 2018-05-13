@@ -8,13 +8,11 @@ import (
 
 var ParseMorphemesTests = []struct {
 	name   string
-	file   string
 	text   string
 	expect morphemes
 }{
 	{
 		name: "should parse the whitespace from *.mecab file",
-		file: "whitespace-test.txt.mecab",
 		text: `　	記号,空白,*,*,*,*,　,　,　`,
 		expect: morphemes{
 			morpheme{"surface": "　", "base": "　", "pos": "記号", "pos1": "空白"},
@@ -22,7 +20,6 @@ var ParseMorphemesTests = []struct {
 	},
 	{
 		name: "should parse the full set of morphemes from *.mecab file",
-		file: "fullset-test.txt.mecab",
 		text: `吾輩	名詞,代名詞,一般,*,*,*,吾輩,ワガハイ,ワガハイ
 は	助詞,係助詞,*,*,*,*,は,ハ,ワ
 猫	名詞,一般,*,*,*,*,猫,ネコ,ネコ
@@ -42,7 +39,6 @@ EOS
 	},
 	{
 		name: "should return the empty morphemes from *mecab file",
-		file: "fail-text.txt.mecab",
 		text: `EOS
 EOS
 EOS`,
