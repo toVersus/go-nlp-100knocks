@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -54,23 +54,13 @@ func TestParseMorphemesTests(t *testing.T) {
 	for _, testcase := range ParseMorphemesTests {
 		t.Log(testcase.name)
 
-		f, err := os.Create(testcase.file)
-		if err != nil {
-			t.Errorf("could not crearte a new file: %s\n  %s\n", testcase.file, err)
-		}
-		f.Write([]byte(testcase.text))
-		f.Close()
-
-		results, err := newMorpheme(testcase.file)
+		r := strings.NewReader(testcase.text)
+		result, err := newMorpheme(r)
 		if err != nil {
 			t.Error(err)
 		}
-		if !reflect.DeepEqual(results, testcase.expect) {
-			t.Errorf("result => %#v\n shpould contain => %#v\n", results, testcase.expect)
-		}
-
-		if err := os.Remove(testcase.file); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
+		if !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n should contain => %#v\n", result, testcase.expect)
 		}
 	}
 }
