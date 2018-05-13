@@ -10,13 +10,13 @@ var ParseMorphemesTests = []struct {
 	name   string
 	file   string
 	text   string
-	expect *morphemes
+	expect morphemes
 }{
 	{
 		name: "should parse the whitespace from *.mecab file",
 		file: "whitespace-test.txt.mecab",
 		text: `　	記号,空白,*,*,*,*,　,　,　`,
-		expect: &morphemes{
+		expect: morphemes{
 			morpheme{"surface": "　", "base": "　", "pos": "記号", "pos1": "空白"},
 		},
 	},
@@ -31,7 +31,7 @@ var ParseMorphemesTests = []struct {
 。	記号,句点,*,*,*,*,。,。,。
 EOS
 `,
-		expect: &morphemes{
+		expect: morphemes{
 			morpheme{"surface": "吾輩", "base": "吾輩", "pos": "名詞", "pos1": "代名詞"},
 			morpheme{"surface": "は", "base": "は", "pos": "助詞", "pos1": "係助詞"},
 			morpheme{"surface": "猫", "base": "猫", "pos": "名詞", "pos1": "一般"},
@@ -46,7 +46,7 @@ EOS
 		text: `EOS
 EOS
 EOS`,
-		expect: &morphemes{},
+		expect: morphemes{},
 	},
 }
 
@@ -61,7 +61,7 @@ func TestParseMorphemesTests(t *testing.T) {
 		f.Write([]byte(testcase.text))
 		f.Close()
 
-		results, err := parseMorphemes(testcase.file)
+		results, err := newMorpheme(testcase.file)
 		if err != nil {
 			t.Error(err)
 		}
