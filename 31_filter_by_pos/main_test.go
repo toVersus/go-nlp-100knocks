@@ -1,21 +1,38 @@
 package main
 
 import (
-	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
 var ParseMorphemesTests = []struct {
 	name   string
-	file   string
 	text   string
-	expect morphemes
+	field  string
+	expect string
 }{
 	{
 		name: "should parse the full set of morphemes from *.mecab file",
-		file: "fullset-test.txt.mecab",
-		text: `　	記号,空白,*,*,*,*,　,　,　
+		text: `一	名詞,数,*,*,*,*,一,イチ,イチ
+EOS
+EOS
+　	記号,空白,*,*,*,*,　,　,　
+吾輩	名詞,代名詞,一般,*,*,*,吾輩,ワガハイ,ワガハイ
+は	助詞,係助詞,*,*,*,*,は,ハ,ワ
+猫	名詞,一般,*,*,*,*,猫,ネコ,ネコ
+で	助動詞,*,*,*,特殊・ダ,連用形,だ,デ,デ
+ある	助動詞,*,*,*,五段・ラ行アル,基本形,ある,アル,アル
+。	記号,句点,*,*,*,*,。,。,。
+EOS
+名前	名詞,一般,*,*,*,*,名前,ナマエ,ナマエ
+は	助詞,係助詞,*,*,*,*,は,ハ,ワ
+まだ	副詞,助詞類接続,*,*,*,*,まだ,マダ,マダ
+無い	形容詞,自立,*,*,形容詞・アウオ段,基本形,無い,ナイ,ナイ
+。	記号,句点,*,*,*,*,。,。,。
+EOS
+EOS
+　	記号,空白,*,*,*,*,　,　,　
 どこ	名詞,代名詞,一般,*,*,*,どこ,ドコ,ドコ
 で	助詞,格助詞,一般,*,*,*,で,デ,デ
 生れ	動詞,自立,*,*,一段,連用形,生れる,ウマレ,ウマレ
@@ -29,18 +46,16 @@ var ParseMorphemesTests = []struct {
 。	記号,句点,*,*,*,*,。,。,。
 EOS
 `,
-		expect: morphemes{
-			&morpheme{"surface": "生れ", "base": "生れる", "pos": "動詞", "pos1": "自立"},
-			&morpheme{"surface": "つか", "base": "つく", "pos": "動詞", "pos1": "自立"},
-		},
+		field:  "surface",
+		expect: "生れ\nつか",
 	},
 	{
 		name: "should return the empty morphemes from *mecab file",
-		file: "fail-text.txt.mecab",
 		text: `EOS
 EOS
 EOS`,
-		expect: nil,
+		field:  "surface",
+		expect: "",
 	},
 }
 
@@ -48,23 +63,13 @@ func TestParseMorphemesTests(t *testing.T) {
 	for _, testcase := range ParseMorphemesTests {
 		t.Log(testcase.name)
 
-		f, err := os.Create(testcase.file)
-		if err != nil {
-			t.Errorf("could not crearte a new file: %s\n  %s\n", testcase.file, err)
-		}
-		f.WriteString(testcase.text)
-		f.Close()
-
-		morphs, err := newMorpheme(testcase.file)
+		r := strings.NewReader(testcase.text)
+		morphs, err := newMorpheme(r)
 		if err != nil {
 			t.Error(err)
 		}
-		if result := morphs.filterByPos("動詞"); !reflect.DeepEqual(result, testcase.expect) {
+		if result := morphs.filterByPos("動詞").stringify(testcase.field); !reflect.DeepEqual(result, testcase.expect) {
 			t.Errorf("result => %#v\n shpould contain => %#v\n", result, testcase.expect)
-		}
-
-		if err := os.Remove(testcase.file); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file, err)
 		}
 	}
 }

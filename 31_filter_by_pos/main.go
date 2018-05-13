@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -15,11 +16,13 @@ func main() {
 	flag.StringVar(&filePath, "f", "", "specify a file path")
 	flag.Parse()
 
-	if _, err := os.Stat(filePath); err != nil {
+	f, err := os.Open(filePath)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot find the specified file: %s\n  %s\n", filePath, err)
 	}
+	defer f.Close()
 
-	morphs, err := newMorpheme(filePath)
+	morphs, err := newMorpheme(f)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -36,15 +39,9 @@ type morphemes []*morpheme
 // newMorpheme implements the constructor of Morpheme.
 // MeCab outputs the following data structure through morphological analysis.
 // <Surface>\t<POS>,<POS subtyping1>,<POS subtyping2>,<POS subtyping3>,<Conjugation Form>,<Conjugation>,<Base>,<Furigana>,<Pronunciation>
-func newMorpheme(path string) (morphemes, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("cannot open the specified file: %s\n  %s", path, err)
-	}
-	defer f.Close()
-
+func newMorpheme(r io.Reader) (morphemes, error) {
 	morphs := morphemes{}
-	sc := bufio.NewScanner(f)
+	sc := bufio.NewScanner(r)
 	for sc.Scan() {
 		if sc.Text() == "EOS" || sc.Text() == "" {
 			continue
