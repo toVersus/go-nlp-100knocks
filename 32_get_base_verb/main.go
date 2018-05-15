@@ -74,6 +74,9 @@ func (morphs morphemes) filterByPos(keyword string) morphemes {
 func (morphs morphemes) stringify(field string) string {
 	buf := bytes.Buffer{}
 	for _, morph := range morphs {
+		if morph == nil {
+			continue
+		}
 		buf.WriteString((*morph)[field] + "\n")
 	}
 	return strings.TrimRight(buf.String(), "\n")
