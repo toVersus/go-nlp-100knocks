@@ -61,23 +61,23 @@ func newMorpheme(r io.Reader) (morphemes, error) {
 }
 
 // filter filters the key of morphems by specified keyword
-func (morphs morphemes) filter(key, keyword string) *morphemes {
+func (morphs morphemes) filter(key, keyword string) morphemes {
 	var filtered morphemes
 	for _, m := range morphs {
 		if (*m)[key] == keyword {
 			filtered = append(filtered, m)
 		}
 	}
-	return &filtered
+	return filtered
 }
 
 // filterByPos filters the pos of morphems by specified keyword
-func (morphs morphemes) filterByPos(keyword string) *morphemes {
+func (morphs morphemes) filterByPos(keyword string) morphemes {
 	return morphs.filter("pos", keyword)
 }
 
 // filterByPos1 filters the pos of morphems by specified keyword
-func (morphs morphemes) filterByPos1(keyword string) *morphemes {
+func (morphs morphemes) filterByPos1(keyword string) morphemes {
 	return morphs.filter("pos1", keyword)
 }
 
