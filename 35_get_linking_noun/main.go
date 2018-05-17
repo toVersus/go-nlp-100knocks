@@ -75,14 +75,14 @@ func (morphes morphemes) getLinkingNounPhrases() string {
 				linkingNoun = strings.Join(nounPieces, "")
 				linkingnounPhrases = append(linkingnounPhrases, linkingNoun)
 			}
-		} else {
-			// Only concatenate noun pieces in case of linking noun
-			if len(nounPieces) > 1 {
-				linkingNoun = strings.Join(nounPieces, "")
-				linkingnounPhrases = append(linkingnounPhrases, linkingNoun)
-			}
-			nounPieces = nil
+			continue
 		}
+		// Only concatenate noun pieces in case of linking noun
+		if len(nounPieces) > 1 {
+			linkingNoun = strings.Join(nounPieces, "")
+			linkingnounPhrases = append(linkingnounPhrases, linkingNoun)
+		}
+		nounPieces = nil
 	}
 	return strings.Join(linkingnounPhrases, "\n")
 }
