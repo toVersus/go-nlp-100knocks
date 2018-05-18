@@ -10,7 +10,7 @@ var sortByAppearanceTests = []struct {
 	name   string
 	file   string
 	text   string
-	expect CountSorters
+	expect string
 }{
 	{
 		name: "should return the surface verb stably sorted by appearance",
@@ -35,25 +35,23 @@ var sortByAppearanceTests = []struct {
 。	記号,句点,*,*,*,*,。,。,。
 EOS
 `,
-		expect: CountSorters{
-			CountSorter{"南無阿弥陀仏", 2},
-			CountSorter{"チー", 1},
-			CountSorter{"ン", 1},
-			CountSorter{"南無", 1},
-			CountSorter{"猫", 1},
-			CountSorter{"誉", 1},
-			CountSorter{"信女", 1},
-			CountSorter{"、", 1},
-			CountSorter{"と", 1},
-			CountSorter{"御", 1},
-			CountSorter{"師匠", 1},
-			CountSorter{"さん", 1},
-			CountSorter{"の", 1},
-			CountSorter{"声", 1},
-			CountSorter{"が", 1},
-			CountSorter{"する", 1},
-			CountSorter{"。", 1},
-		},
+		expect: `Key:南無阿弥陀仏 Count:2
+Key:チー Count:1
+Key:ン Count:1
+Key:南無 Count:1
+Key:猫 Count:1
+Key:誉 Count:1
+Key:信女 Count:1
+Key:、 Count:1
+Key:と Count:1
+Key:御 Count:1
+Key:師匠 Count:1
+Key:さん Count:1
+Key:の Count:1
+Key:声 Count:1
+Key:が Count:1
+Key:する Count:1
+Key:。 Count:1`,
 	},
 	{
 		name: "should return nothing from the text only containing \"EOS\"",
@@ -61,7 +59,7 @@ EOS
 		text: `EOS
 EOS
 EOS`,
-		expect: CountSorters(nil),
+		expect: "",
 	},
 }
 
@@ -75,7 +73,7 @@ func TestSortByAppearanceTests(t *testing.T) {
 			t.Error(err)
 		}
 
-		if result := morphs.sortByAppearance(); !reflect.DeepEqual(result, testcase.expect) {
+		if result := morphs.sortByAppearance().String(); !reflect.DeepEqual(result, testcase.expect) {
 			t.Errorf("result => %#v\n shpould contain => %#v\n", result, testcase.expect)
 		}
 	}

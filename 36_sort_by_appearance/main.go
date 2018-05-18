@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -28,8 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	ranking := morphs.sortByAppearance()
-	fmt.Printf("Surface: %s, Counts: %d\n", ranking[1].Key, ranking[1].Count)
+	fmt.Println(morphs.sortByAppearance().String())
 }
 
 // morpheme represents the mapping list of MeCab format.
@@ -62,24 +62,34 @@ func newMorpheme(r io.Reader) (morphemes, error) {
 	return morphs, nil
 }
 
-// CountSorter is used for sorting the key by counts
-type CountSorter struct {
+// sortCounter is used for sorting the key by counts
+type sortCounter struct {
 	Key   string
 	Count int
 }
 
-// CountSorters represents the slice of Countsorter
-type CountSorters []CountSorter
+// countSorsortCountersters represents the slice of Countsorter
+type sortCounters []sortCounter
 
-// sortByAppearance returns the surface sorted by its appearance in Morphemes
-func (morphes *morphemes) sortByAppearance() CountSorters {
+func (counters sortCounters) String() string {
+	var buf bytes.Buffer
+	for _, counter := range counters {
+		// remove the first character "{"
+		ans := fmt.Sprintf("%+v\n", counter)[1:]
+		buf.WriteString(strings.Replace(ans, "}", "", -1))
+	}
+	return strings.TrimRight(buf.String(), "\n")
+}
+
+// sortByAppearance returns the surface verb stably sorted by their appearance
+func (morphes *morphemes) sortByAppearance() sortCounters {
 	// counter counts frequency of word
 	counter := map[string]int{}
-	var sortedWords CountSorters
+	var sortedWords sortCounters
 	var word string
 
 	// Use separate slice container to memorize stable iteration order
-	// See Iteration order section in the following URL
+	// See Iteration order section in the following URL:
 	// https://blog.golang.org/go-maps-in-action
 	var keys []string
 
@@ -87,16 +97,16 @@ func (morphes *morphemes) sortByAppearance() CountSorters {
 		word = (*morph)["surface"]
 		if _, ok := counter[word]; ok {
 			counter[word]++
-		} else {
-			// Memorize original order of words
-			keys = append(keys, word)
-			counter[word] = 1
+			continue
 		}
+		// Memorize original order of words
+		keys = append(keys, word)
+		counter[word] = 1
 	}
 
 	for _, key := range keys {
 		// Assign sorter in fixed order using memorized keys
-		sortedWords = append(sortedWords, CountSorter{
+		sortedWords = append(sortedWords, sortCounter{
 			Key:   key,
 			Count: counter[key],
 		})
