@@ -8,13 +8,11 @@ import (
 
 var getLinkingNounPhrasesTests = []struct {
 	name   string
-	file   string
 	text   string
 	expect string
 }{
 	{
 		name: "should select the linking noun phrases from the full text including symbol such as \"、\" and \"。\"",
-		file: "full-test.txt.mecab",
 		text: `チー	名詞,固有名詞,人名,一般,*,*,チー,チー,チー
 ン	名詞,非自立,一般,*,*,*,ン,ン,ン
 南無	感動詞,*,*,*,*,*,南無,ナム,ナム
@@ -39,7 +37,6 @@ EOS
 	},
 	{
 		name: "should select the linking noun phrases from the full text including lower case letter",
-		file: "fail-text.txt.mecab",
 		text: `呼ん	動詞,自立,*,*,五段・バ行,連用タ接続,呼ぶ,ヨン,ヨン
 で	助詞,接続助詞,*,*,*,*,で,デ,デ
 御前	名詞,一般,*,*,*,*,御前,ゴゼン,ゴゼン
@@ -62,7 +59,6 @@ EOS`,
 	},
 	{
 		name: "should select the linking noun phrases from the full text",
-		file: "fail-text.txt.mecab",
 		text: `「	記号,括弧開,*,*,*,*,「,「,「
 なるほど	感動詞,*,*,*,*,*,なるほど,ナルホド,ナルホド
 面白い	形容詞,自立,*,*,形容詞・アウオ段,基本形,面白い,オモシロイ,オモシロイ

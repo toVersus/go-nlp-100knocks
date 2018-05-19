@@ -8,13 +8,11 @@ import (
 
 var sortByAppearanceTests = []struct {
 	name   string
-	file   string
 	text   string
 	expect string
 }{
 	{
 		name: "should return the surface verb stably sorted by appearance",
-		file: "full-test.txt.mecab",
 		text: `チー	名詞,固有名詞,人名,一般,*,*,チー,チー,チー
 ン	名詞,非自立,一般,*,*,*,ン,ン,ン
 南無	感動詞,*,*,*,*,*,南無,ナム,ナム
@@ -55,7 +53,6 @@ Key:。 Count:1`,
 	},
 	{
 		name: "should return nothing from the text only containing \"EOS\"",
-		file: "fail-text.txt.mecab",
 		text: `EOS
 EOS
 EOS`,
