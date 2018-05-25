@@ -133,41 +133,55 @@ func newChunkPassage(r io.Reader) *ChunkPassage {
 	return &chunkPassage
 }
 
-func (chunkPassage ChunkPassage) listNounToVerbDependency() []string {
-	var words, texts []string
+func (chunkPassage ChunkPassage) listNounToVerbDependency() string {
+	var buf bytes.Buffer
 	var hasNounInSrcPhrases, hasVerbInDstPhrases = false, false
 	for _, passage := range chunkPassage {
 		for _, chunk := range passage {
-			if chunk.dst != -1 {
-				words = nil
-				hasNounInSrcPhrases, hasVerbInDstPhrases = false, false
+			if chunk.dst == -1 {
+				continue
+			}
 
-				for _, srcMorph := range chunk.morphems {
-					if srcMorph.pos != "記号" {
-						words = append(words, srcMorph.surface)
-					}
+			hasNounInSrcPhrases, hasVerbInDstPhrases = false, false
 
-					if srcMorph.pos == "名詞" {
-						hasNounInSrcPhrases = true
-					}
-				}
-
-				for _, dstMorph := range passage[chunk.dst].morphems {
-					if dstMorph.pos != "記号" {
-						words = append(words, dstMorph.surface)
-					}
-
-					if dstMorph.pos == "動詞" {
-						hasVerbInDstPhrases = true
-					}
-				}
-
-				if (hasNounInSrcPhrases == true) && (hasVerbInDstPhrases == true) {
-					texts = append(texts, strings.Join(words, "\t"))
+			for _, src := range chunk.morphems {
+				if src.pos == "名詞" {
+					hasNounInSrcPhrases = true
+					break
 				}
 			}
+
+			if !hasNounInSrcPhrases {
+				continue
+			}
+
+			for _, dst := range passage[chunk.dst].morphems {
+				if dst.pos == "動詞" {
+					hasVerbInDstPhrases = true
+					break
+				}
+			}
+
+			if !hasVerbInDstPhrases {
+				continue
+			}
+
+			for _, src := range chunk.morphems {
+				if src.pos == "記号" {
+					continue
+				}
+				buf.WriteString(src.surface + "\t")
+			}
+
+			for _, dst := range passage[chunk.dst].morphems {
+				if dst.pos == "記号" {
+					continue
+				}
+				buf.WriteString(dst.surface + "\t")
+			}
+			buf.WriteString("\n")
 		}
 	}
 
-	return texts
+	return strings.TrimRight(strings.Replace(buf.String(), "\t\n", "\n", -1), "\n")
 }

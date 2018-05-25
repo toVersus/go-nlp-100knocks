@@ -8,13 +8,11 @@ import (
 
 var listNounToVerbDependencyTests = []struct {
 	name   string
-	file   string
 	text   string
-	expect []string
+	expect string
 }{
 	{
 		name: "should return the sorted surface from the full text",
-		file: "full-test.txt.mecab",
 		text: `* 0 -1D 0/0 0.000000
 一	名詞,数,*,*,*,*,一,イチ,イチ
 EOS
@@ -41,19 +39,17 @@ EOS
 EOS
 EOS
 `,
-		expect: []string(nil),
+		expect: "",
 	},
 	{
 		name: "should return nothing from the text only containing \"EOS\"",
-		file: "fail-text.txt.mecab",
 		text: `EOS
 EOS
 EOS`,
-		expect: []string(nil),
+		expect: "",
 	},
 	{
 		name: "should return the sorted surface from the full text",
-		file: "full-test.txt.mecab",
 		text: `EOS
 * 0 1D 0/1 1.816431
 そこ	名詞,代名詞,一般,*,*,*,そこ,ソコ,ソコ
@@ -91,13 +87,7 @@ EOS`,
 EOS
 
 `,
-		expect: []string{
-			"そこ\tを\t我慢\tし\tて",
-			"我慢\tし\tて\t這っ\tて\t行く\tと",
-			"無理やり\tに\t這っ\tて\t行く\tと",
-			"事\tで\t出\tた",
-			"所\tへ\t出\tた",
-		},
+		expect: "そこ\tを\t我慢\tし\tて\n我慢\tし\tて\t這っ\tて\t行く\tと\n無理やり\tに\t這っ\tて\t行く\tと\n事\tで\t出\tた\n所\tへ\t出\tた",
 	},
 }
 
@@ -110,4 +100,17 @@ func TestListNounToVerbDependency(t *testing.T) {
 			t.Errorf("result => %#v\n should contain => %#v\n", result, testcase.expect)
 		}
 	}
+}
+
+var result string
+
+func BenchmarkListNounToVerbDependency(b *testing.B) {
+	var s string
+	for i := 0; i < b.N; i++ {
+		for _, testcase := range listNounToVerbDependencyTests {
+			r := strings.NewReader(testcase.text)
+			s = newChunkPassage(r).listNounToVerbDependency()
+		}
+	}
+	result = s
 }
