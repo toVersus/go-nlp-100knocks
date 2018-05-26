@@ -6,13 +6,11 @@ import (
 	"testing"
 )
 
-var digraphTests = []struct {
-	name           string
-	text           string
-	sentenceNum    int
-	nodesExpect    []string
-	srcEdgesExpect []string
-	dstEdgesExpect []string
+var digraphDotStructTests = []struct {
+	name        string
+	text        string
+	sentenceNum int
+	ctx         string
 }{
 	{
 		name: "should return the sorted surface from the full text",
@@ -42,17 +40,8 @@ EOS
 EOS
 EOS
 `,
+		ctx:         "digraph  {\n\t->猫である[ color=black ];\n\t吾輩は->猫である[ color=black ];\n\t[ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t吾輩は [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t猫である [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\n}\n",
 		sentenceNum: 2,
-		nodesExpect: []string{
-			"吾輩は",
-			"猫である",
-		},
-		srcEdgesExpect: []string{
-			"吾輩は",
-		},
-		dstEdgesExpect: []string{
-			"猫である",
-		},
 	},
 	{
 		name: "should return the sorted surface from the full text",
@@ -94,92 +83,21 @@ EOS
 
 `,
 		sentenceNum: 1,
-		nodesExpect: []string{
-			"そこを",
-			"我慢して",
-			"無理やりに",
-			"這って行くと",
-			"ようやくの",
-			"事で",
-			"何となく",
-			"人間臭い",
-			"所へ",
-			"出た",
-		},
-		srcEdgesExpect: []string{
-			"そこを",
-			"我慢して",
-			"無理やりに",
-			"這って行くと",
-			"ようやくの",
-			"事で",
-			"何となく",
-			"人間臭い",
-			"所へ",
-		},
-		dstEdgesExpect: []string{
-			"我慢して",
-			"這って行くと",
-			"這って行くと",
-			"出た",
-			"事で",
-			"出た",
-			"人間臭い",
-			"所へ",
-			"出た",
-		},
+		ctx:         "digraph  {\n\tそこを->我慢して[ color=black ];\n\t我慢して->這って行くと[ color=black ];\n\t無理やりに->這って行くと[ color=black ];\n\t這って行くと->出た[ color=black ];\n\tようやくの->事で[ color=black ];\n\t事で->出た[ color=black ];\n\t何となく->人間臭い[ color=black ];\n\t人間臭い->所へ[ color=black ];\n\t所へ->出た[ color=black ];\n\tそこを [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\tようやくの [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t事で [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t人間臭い [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t何となく [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t出た [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t我慢して [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t所へ [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t無理やりに [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\t這って行くと [ color=10, colorscheme=rdylgn11, fillcolor=7, fontcolor=black, fontname=\"Migu 1M\", style=\"solid,filled\" ];\n\n}\n",
 	},
 }
 
 func TestExtractDependedPhrases(t *testing.T) {
-	for _, testcase := range digraphTests {
+	for _, testcase := range digraphDotStructTests {
 		t.Log(testcase.name)
 
 		r := strings.NewReader(testcase.text)
-		chunkPassage := newChunkPassage(r)
-
-		var nodesResults, srcEdgesResults, dstEdgesResults []string
-		for _, chunk := range (*chunkPassage)[testcase.sentenceNum-1] {
-			var srcWords, dstWords []string
-			var srcStr, dstStr string
-			for _, src := range chunk.morphems {
-				if src.pos == "記号" {
-					continue
-				}
-				srcWords = append(srcWords, src.surface)
-			}
-
-			srcStr = strings.Join(srcWords, "")
-			if srcStr != "" {
-				nodesResults = append(nodesResults, srcStr)
-			}
-
-			if chunk.dst != -1 {
-				for _, dst := range (*chunkPassage)[testcase.sentenceNum-1][chunk.dst].morphems {
-					if dst.pos == "記号" {
-						continue
-					}
-					dstWords = append(dstWords, dst.surface)
-				}
-				dstStr = strings.Join(dstWords, "")
-
-				if srcStr != "" && dstStr != "" {
-					srcEdgesResults = append(srcEdgesResults, srcStr)
-					dstEdgesResults = append(dstEdgesResults, dstStr)
-				}
-			}
+		result, err := newChunkPassage(r).stringifyDigraphDotStruct(testcase.sentenceNum)
+		if err != nil {
+			t.Errorf("could not get context of digraph dot structure: %s", err)
 		}
-
-		if !reflect.DeepEqual(nodesResults, testcase.nodesExpect) {
-			t.Errorf("node result => %#v\n  should contain => %#v\n", nodesResults, testcase.nodesExpect)
-		}
-
-		if !reflect.DeepEqual(srcEdgesResults, testcase.srcEdgesExpect) {
-			t.Errorf("src edge result => %#v\n  should contain => %#v\n", srcEdgesResults, testcase.srcEdgesExpect)
-		}
-
-		if !reflect.DeepEqual(dstEdgesResults, testcase.dstEdgesExpect) {
-			t.Errorf("dst edge result => %#v\n  should contain => %#v\n", dstEdgesResults, testcase.dstEdgesExpect)
+		if !reflect.DeepEqual(result, testcase.ctx) {
+			t.Errorf("node result => %#v\n  should contain => %#v\n", result, testcase.ctx)
 		}
 	}
 }

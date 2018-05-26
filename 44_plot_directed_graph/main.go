@@ -29,8 +29,13 @@ func main() {
 	}
 	defer f.Close()
 
-	if err := newChunkPassage(f).createDigraphDotFile(sentenceNum, dotFilepath); err != nil {
-		log.Fatal("could not create digraph dot file: ", err)
+	ctx, err := newChunkPassage(f).stringifyDigraphDotStruct(sentenceNum)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := createDotFile(ctx, dotFilepath); err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -141,17 +146,17 @@ func newChunkPassage(r io.Reader) *ChunkPassage {
 	return &chunkPassage
 }
 
-// createDigraphDotFile creates dot file to visualize dependency tree as digraphs
-func (chunkPassage ChunkPassage) createDigraphDotFile(sentenceNum int, filepath string) error {
+// stringifyDigraphDotStruct returns dot file context to visualize dependency tree as digraphs.
+func (chunkPassage ChunkPassage) stringifyDigraphDotStruct(sentenceNum int) (string, error) {
 	if len(chunkPassage) < 1 {
-		return fmt.Errorf("could not get the meaningful results from dependency analysis")
+		return "", fmt.Errorf("could not get the meaningful results from dependency analysis")
 	}
 
 	var srcStr, dstStr string
 
 	g := gographviz.NewGraph()
 	if err := g.SetDir(true); err != nil {
-		panic(err)
+		return "", fmt.Errorf("could not set the directed graph: %s", err)
 	}
 
 	nodeAttrs := make(map[string]string)
@@ -168,37 +173,46 @@ func (chunkPassage ChunkPassage) createDigraphDotFile(sentenceNum int, filepath 
 	for _, chunk := range chunkPassage[sentenceNum-1] {
 		var srcWords, dstWords []string
 		for _, src := range chunk.morphems {
-			if src.pos != "記号" {
-				srcWords = append(srcWords, src.surface)
+			if src.pos == "記号" {
+				continue
 			}
+			srcWords = append(srcWords, src.surface)
 		}
 		srcStr = strings.Join(srcWords, "")
 
 		// Add all phrases as node
 		if err := g.AddNode("G", srcStr, nodeAttrs); err != nil {
-			panic(err)
+			return "", fmt.Errorf("could not add node to the graph: %s", err)
 		}
 
-		if chunk.dst != -1 {
-			for _, dst := range chunkPassage[sentenceNum-1][chunk.dst].morphems {
-				if dst.pos != "記号" {
-					dstWords = append(dstWords, dst.surface)
-				}
-			}
-			dstStr = strings.Join(dstWords, "")
+		if chunk.dst == -1 {
+			continue
+		}
 
-			// Add source-destination pair of phrases (src -> dst)
-			if err := g.AddEdge(srcStr, dstStr, true, edgeAttrs); err != nil {
-				panic(err)
+		for _, dst := range chunkPassage[sentenceNum-1][chunk.dst].morphems {
+			if dst.pos == "記号" {
+				continue
 			}
+			dstWords = append(dstWords, dst.surface)
+		}
+		dstStr = strings.Join(dstWords, "")
+
+		// Add source-destination pair of phrases (src -> dst)
+		if err := g.AddEdge(srcStr, dstStr, true, edgeAttrs); err != nil {
+			return "", fmt.Errorf("could not add an edge to the graph from node src to node dst: %s", err)
 		}
 	}
 
+	return g.String(), nil
+}
+
+// createDotFile creates dot file to the specified path.
+func createDotFile(ctx, filepath string) error {
 	f, err := os.Create(filepath)
 	if err != nil {
 		return fmt.Errorf("could not create a file: %s\n  %s", filepath, err)
 	}
-	f.WriteString(g.String())
+	f.WriteString(ctx)
 	f.Close()
 
 	return nil
