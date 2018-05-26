@@ -3,3 +3,5 @@
 *.mecab
 *.png
 *.cabocha
+*.dot
+*.gif
