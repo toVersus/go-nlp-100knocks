@@ -132,7 +132,7 @@ func newChunkPassage(r io.Reader) *ChunkPassage {
 	return &chunkPassage
 }
 
-// stringifyCasePattern outputs pair of left-most verb and depended particles into a file
+// stringifyCasePattern returns formatted case pattern.
 func (chunkPassage ChunkPassage) stringifyCasePattern() string {
 	var verb, particle string
 	var buf bytes.Buffer
@@ -176,21 +176,22 @@ func getVerb(morphs []*Morph) string {
 	return ""
 }
 
-func getParticles(i int, passage []Chunk) string {
+func getParticles(currentIdx int, passage []Chunk) string {
+	var tmp string
 	var buf bytes.Buffer
-	for _, src := range passage[i].srcs {
-		var particle string
+	for _, src := range passage[currentIdx].srcs {
 		for _, morph := range passage[src].morphems {
 			if morph.pos != "助詞" {
 				continue
 			}
 			// Extract only last particle in the phrase
-			particle = morph.surface
+			tmp = morph.surface
+
 		}
-		if particle == "" {
+		if tmp == "" {
 			continue
 		}
-		buf.WriteString(particle + " ")
+		buf.WriteString(tmp + " ")
 	}
 	return strings.TrimRight(buf.String(), " ")
 }

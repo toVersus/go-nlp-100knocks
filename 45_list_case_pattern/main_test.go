@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var stringifyCasePatternTests = []struct {
+var casePatternTests = []struct {
 	name   string
 	text   string
 	expect string
@@ -87,12 +87,12 @@ EOS`,
 EOS
 
 `,
-		expect: "する	を\n這う	て に\n出る	と で へ",
+		expect: "する\tを\n這う\tて に\n出る\tと で へ",
 	},
 }
 
-func TestStringifyCasePattern(t *testing.T) {
-	for _, testcase := range stringifyCasePatternTests {
+func TestCasePattern(t *testing.T) {
+	for _, testcase := range casePatternTests {
 		t.Log(testcase.name)
 
 		r := strings.NewReader(testcase.text)
