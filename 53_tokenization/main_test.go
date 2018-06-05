@@ -217,8 +217,8 @@ func TestTokenize(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
-		for _, sent := range root.Document.Sentences {
-			for _, token := range sent.Tokens {
+		for _, sent := range root.Document.Sentences.Sentence {
+			for _, token := range sent.Tokens.Token {
 				buf.WriteString(token.Word + "\n")
 			}
 		}

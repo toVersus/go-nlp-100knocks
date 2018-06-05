@@ -13,27 +13,27 @@ type Root struct {
 }
 
 type Document struct {
-	Sentences    Sentences    `xml:"sentences>sentence"`
-	Coreferences Coreferences `xml:"coreference>coreference"`
+	Sentences    *Sentences    `xml:"sentences,omitempty"`
+	Coreferences *Coreferences `xml:"coreference,omitempty"`
 }
 
-type Sentences []*Sentence
-
-type Coreferences []*Coreference
+type Sentences struct {
+	Sentence []*Sentence `xml:"sentence,omitempty"`
+}
 
 type Sentence struct {
-	ID           int          `xml:"id,attr"`
-	Dependencies Dependencies `xml:"dependencies"`
-	Parse        string       `xml:"parse,omitempty"`
-	Tokens       Tokes        `xml:"tokens>token,omitempty"`
+	ID           string          `xml:"id,attr"`
+	Dependencies []*Dependencies `xml:"dependencies"`
+	Parse        *Parse          `xml:"parse,omitempty"`
+	Tokens       Tokens          `xml:"tokens,omitempty"`
 }
 
-type Dependencies []*Dependencie
-
-type Tokes []*Token
+type Tokens struct {
+	Token []*Token `xml:"token,omitempty"`
+}
 
 type Token struct {
-	ID                   int    `xml:"id,attr"`
+	ID                   string `xml:"id,attr"`
 	Word                 string `xml:"word,omitempty"`
 	Lemma                string `xml:"lemma,omitempty"`
 	CharacterOffsetBegin int    `xml:"CharacterOffsetBegin,omitempty"`
@@ -48,19 +48,23 @@ type Token struct {
 type Timex struct {
 	Tid   string `xml:"tid,attr"`
 	Type  string `xml:"type,attr"`
-	Value string `xml:",chardata"`
+	Value string
+}
+
+type Parse struct {
+	Value string
 }
 
 type Governor struct {
 	Copy  string `xml:"copy,attr"`
-	Idx   int    `xml:"idx,attr"`
-	Value string `xml:",chardata"`
+	Idx   string `xml:"idx,attr"`
+	Value string
 }
 
 type Dependent struct {
 	Copy  string `xml:"copy,attr"`
-	Idx   int    `xml:"idx,attr"`
-	Value string `xml:",chardata"`
+	Idx   string `xml:"idx,attr"`
+	Value string
 }
 
 type Dep struct {
@@ -70,18 +74,18 @@ type Dep struct {
 	Governor  *Governor  `xml:"governor,omitempty"`
 }
 
-type Dependencie struct {
+type Dependencies struct {
 	Type string `xml:"type,attr"`
-	Deps Deps   `xml:"dep,omitempty"`
+	Dep  []*Dep `xml:"dep,omitempty"`
 }
 
-type Deps []*Dep
+type Coreferences struct {
+	Coreference []*Coreference `xml:"coreference,omitempty"`
+}
 
 type Coreference struct {
-	Mentions Mentions `xml:"mention,omitempty"`
+	Mention []*Mention `xml:"mention,omitempty"`
 }
-
-type Mentions []*Mention
 
 type Mention struct {
 	Representative string `xml:"representative,attr"`
@@ -93,11 +97,9 @@ type Mention struct {
 }
 
 func main() {
-	var filePath, destFilePath string
+	var filePath string
 	flag.StringVar(&filePath, "file", "", "specify a file path")
 	flag.StringVar(&filePath, "f", "", "specify a file path")
-	flag.StringVar(&destFilePath, "dest", "", "specify a dest file path")
-	flag.StringVar(&destFilePath, "d", "", "specify a dest file path")
 	flag.Parse()
 
 	f, err := os.Open(filePath)
@@ -113,8 +115,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, s := range root.Document.Sentences {
-		for _, t := range s.Tokens {
+	for _, s := range root.Document.Sentences.Sentence {
+		for _, t := range s.Tokens.Token {
 			fmt.Println(t.Word)
 		}
 	}
