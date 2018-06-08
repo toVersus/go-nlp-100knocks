@@ -2,39 +2,40 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
 func main() {
-	var filePathFlag string
-	flag.StringVar(&filePathFlag, "file", "", "specify a file path")
-	flag.StringVar(&filePathFlag, "f", "", "specify a file path")
+	var filePath string
+	flag.StringVar(&filePath, "file", "", "specify a file path")
+	flag.StringVar(&filePath, "f", "", "specify a file path")
 	flag.Parse()
 
-	if _, err := os.Stat(filePathFlag); err != nil {
-		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %#v", filePathFlag, err)
-		os.Exit(1)
+	f, err := os.Open(filePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", filePath, err)
 	}
-	fmt.Println(strings.Join(convertTabToSpace(filePathFlag), "\n"))
+	defer f.Close()
+
+	fmt.Println(convertTabToSpace(f))
 }
 
-// convertTabToSpace reads lines of file one by one and converts tab to whitespace.
-// the same result obtained from UNIX command:
+// convertTabToSpace converts tab in the lines to whitespace one by one.
+// The following UNIX command returns the same output:
 //   sed -e 's/\t/ /g'
 //   tr '\t' ' '
 //   expand
-func convertTabToSpace(path string) []string {
-	var content []string
-	f, _ := os.Open(path)
-	defer f.Close()
-
-	sc := bufio.NewScanner(f)
+func convertTabToSpace(r io.Reader) string {
+	var buf bytes.Buffer
+	sc := bufio.NewScanner(r)
 	for sc.Scan() {
-		content = append(content, strings.Replace(sc.Text(), "\t", " ", -1))
+		buf.WriteString(strings.Replace(sc.Text(), "\t", " ", -1) + "\n")
 	}
 
-	return content
+	return strings.TrimRight(buf.String(), "\n")
 }
