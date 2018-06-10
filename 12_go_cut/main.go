@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -21,36 +23,44 @@ func main() {
 
 	flag.Parse()
 
-	if _, err := os.Stat(srcPath); err != nil {
-		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", srcPath, err)
+	f, err := os.Open(srcPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", srcPath, err)
 		os.Exit(1)
 	}
+	defer f.Close()
 
-	cut(srcPath, destPath, columnNum)
+	text := cut(f, columnNum)
+	if output(destPath, text); err != nil {
+		fmt.Fprintf(os.Stderr, "could not create a file: %s\n  %s", srcPath, err)
+		os.Exit(1)
+	}
 }
 
 // cut extracts the portion of text from a file by selecting rows and write down into a new file.
 // refer to the following UNIX command:
 //   cat foo.txt | sed 's/[\t ]\+/\t/g' | cut -f3
-func cut(srcPath string, destPath string, columnNum int) {
-	src, _ := os.Open(srcPath)
-	defer src.Close()
-
-	dest, _ := os.Create(destPath)
-	defer dest.Close()
-
-	sc := bufio.NewScanner(src)
-	w := bufio.NewWriter(dest)
-	defer w.Flush()
-
-	i := 0
+func cut(r io.Reader, columnNum int) string {
+	var buf bytes.Buffer
+	sc := bufio.NewScanner(r)
 	for sc.Scan() {
 		ss := strings.Fields(strings.Replace(sc.Text(), "\t", " ", -1))
 		if len(ss) < columnNum {
-			fmt.Fprint(w, "")
-		} else {
-			fmt.Fprintf(w, "%s\n", ss[columnNum-1])
+			continue
 		}
-		i++
+		buf.WriteString(ss[columnNum-1] + "\n")
 	}
+	return strings.TrimRight(buf.String(), "\n")
+}
+
+// output just creates a file with given contents.
+func output(filepath, content string) error {
+	f, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("could not create a file: %s", err)
+	}
+	defer f.Close()
+	f.WriteString(content)
+
+	return nil
 }
