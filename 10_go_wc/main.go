@@ -17,6 +17,7 @@ func main() {
 	f, err := os.Open(filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", filePath, err)
+		os.Exit(1)
 	}
 	defer f.Close()
 
