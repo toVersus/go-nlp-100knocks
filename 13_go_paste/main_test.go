@@ -1,26 +1,19 @@
 package main
 
 import (
-	"bufio"
-	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
 var pasteTests = []struct {
 	name   string
-	file1  string
-	file2  string
-	dest   string
 	text1  string
 	text2  string
 	expect string
 }{
 	{
-		name:  "should output the content of input files side-by-side",
-		file1: "col-test1.txt",
-		file2: "col-test2.txt",
-		dest:  "test.txt",
+		name: "should output the content of input files side-by-side",
 		text1: `1
 2
 3
@@ -35,57 +28,35 @@ Lake_Michigan`,
 2	Lake_Superior
 3	Lake_Victoria
 4	Lake_Huron
-5	Lake_Michigan
-`,
+5	Lake_Michigan`,
 	},
+}
+
+func TestPaste(t *testing.T) {
+	for _, testcase := range pasteTests {
+		t.Log(testcase.name)
+
+		r1 := strings.NewReader(testcase.text1)
+		r2 := strings.NewReader(testcase.text2)
+		result, err := paste(r1, r2)
+		if err != nil {
+			t.Error(err)
+		}
+		if !reflect.DeepEqual(result, testcase.expect) {
+			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
+		}
+	}
 }
 
 func TestPasteByChannel(t *testing.T) {
 	for _, testcase := range pasteTests {
 		t.Log(testcase.name)
 
-		file1, err := os.Create(testcase.file1)
-		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s", testcase.file1, err)
-		}
-		file1.WriteString(testcase.text1)
-		file1.Close()
-
-		file2, err := os.Create(testcase.file2)
-		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s", testcase.file2, err)
-		}
-		file2.WriteString(testcase.text2)
-		file2.Close()
-
-		if err := paste(testcase.file1, testcase.file2, testcase.dest); err != nil {
-			t.Error(err)
-		}
-
-		dest, err := os.Open(testcase.dest)
-		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s", testcase.dest, err)
-		}
-
-		// Use bufio scan loop to get text from dest file
-		sc := bufio.NewScanner(dest)
-		var result string
-		for sc.Scan() {
-			result += sc.Text() + "\n"
-		}
+		r1 := strings.NewReader(testcase.text1)
+		r2 := strings.NewReader(testcase.text2)
+		result := pasteByChannel(r1, r2)
 		if !reflect.DeepEqual(result, testcase.expect) {
 			t.Errorf("result => %#v\n expect => %#v\n", result, testcase.expect)
-		}
-		dest.Close()
-
-		if err := os.Remove(testcase.file1); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file1, err)
-		}
-		if err := os.Remove(testcase.file2); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.file2, err)
-		}
-		if err := os.Remove(testcase.dest); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.dest, err)
 		}
 	}
 }
