@@ -55,25 +55,10 @@ type Rating struct {
 }
 
 func main() {
-	var filepath, artistName string
-	flag.StringVar(&filepath, "file", "", "specify a file path")
-	flag.StringVar(&filepath, "f", "", "specify a file path")
+	var artistName string
 	flag.StringVar(&artistName, "name", "", "specify the artist name")
 	flag.StringVar(&artistName, "n", "", "specify the artist name")
 	flag.Parse()
-
-	f, err := os.Open(filepath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", filepath, err)
-		os.Exit(1)
-	}
-	defer f.Close()
-
-	artists, err := readBSON(f)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse artists struct:\n  %s", err)
-		os.Exit(1)
-	}
 
 	session, err := mgo.Dial("mongodb://localhost")
 	if err != nil {
@@ -82,20 +67,6 @@ func main() {
 	}
 
 	c := session.DB("MusicBrainz").C("artist")
-
-	maxSize := len(artists)
-	for progress, artist := range artists {
-		err := c.Insert(artist)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to register artists information:\n  %s", err)
-			os.Exit(1)
-		}
-
-		if progress%10000 == 0 {
-			fmt.Printf("%d / %d...completed\n", progress, maxSize)
-		}
-	}
-
 	query := c.Find(bson.M{"name": artistName})
 	artist, _, err := getQueryTime(query)
 	fmt.Println(artist)
