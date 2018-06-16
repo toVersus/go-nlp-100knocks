@@ -21,45 +21,43 @@ func main() {
 	flag.IntVar(&lineNum, "n", 1, "specify a number of lines from the tail")
 	flag.Parse()
 
-	if _, err := os.Stat(filePath); err != nil {
-		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath, err)
-		os.Exit(1)
-	}
-
-	tail(filePath, lineNum, *os.Stdout)
-}
-
-// tail prints the last n-th lines of input file to the sprcified file descripter
-func tail(path string, lineNum int, file os.File) error {
-	f, err := os.Open(path)
+	f, err := os.Open(filePath)
 	if err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", filePath, err)
+		os.Exit(1)
 	}
 	defer f.Close()
 
+	fmt.Println(tail(f, lineNum))
+}
+
+// tail prints the last n-th lines of input file to the sprcified file descripter
+func tail(r io.Reader, lineNum int) (string, error) {
 	var (
 		count        int
 		currentIndex int
 		isPrefix     bool
 	)
-	w := bufio.NewWriter(&file)
-	r := bufio.NewReaderSize(f, 4096)
+	reader := bufio.NewReaderSize(r, 4096)
 	out := make([]string, lineNum)
 	for {
 		err := func() error {
-			var tmp, line []byte
+			var (
+				readLineErr error
+				tmp, line   []byte
+			)
 			isPrefix = true
-			for isPrefix && err == nil {
-				tmp, isPrefix, err = r.ReadLine()
+			for isPrefix && readLineErr == nil {
+				tmp, isPrefix, readLineErr = reader.ReadLine()
 				line = append(line, tmp...)
 			}
-			if err != nil {
-				return err
+			if readLineErr != nil {
+				return readLineErr
 			}
 
 			// Overwrite the elements of array over and over
 			currentIndex = count % lineNum
-			out[currentIndex] = fmt.Sprintf("%s\n", string(line))
+			out[currentIndex] = fmt.Sprintln(string(line))
 
 			count++
 			return nil
@@ -67,15 +65,9 @@ func tail(path string, lineNum int, file os.File) error {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	// Put the elements of array in order
-	fmt.Fprintf(w, "%s", strings.Join(out[currentIndex+1:], ""))
-	fmt.Fprintf(w, "%s", strings.Join(out[:currentIndex+1], ""))
-
-	w.Flush()
-
-	return nil
+	return strings.Join(out[currentIndex+1:], "") + strings.Join(out[:currentIndex+1], ""), nil
 }
