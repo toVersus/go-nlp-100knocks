@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -19,21 +20,24 @@ func main() {
 	flag.IntVar(&rowNum, "n", 1, "specify n-th row to be extracted")
 	flag.Parse()
 
-	if _, err := os.Stat(filePath); err != nil {
-		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath, err)
-		os.Exit(1)
-	}
-
 	if rowNum < 1 {
 		fmt.Fprint(os.Stderr, "please specify a positive number")
 		os.Exit(1)
 	}
 
-	if err := uniq(filePath, rowNum, *os.Stdout); err != nil {
+	f, err := os.Open(filePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", filePath, err)
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	item, err := uniq(f, rowNum)
+	if err != nil {
 		fmt.Fprint(os.Stderr, "could not filter repeated lines: ", err)
 		os.Exit(1)
 	}
-
+	fmt.Println(strings.Join(item.Strings(), "\n"))
 }
 
 // Item represents Set-type container.
@@ -87,28 +91,16 @@ func (item Item) Union(other Item) Set {
 }
 
 // uniq filters out repeated lines of specified row in a file
-func uniq(path string, rowNum int, file os.File) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("could not open a file: %s\n  %s", path, err)
-	}
-	defer f.Close()
-
-	items := Item{}
-	sc := bufio.NewScanner(f)
+func uniq(r io.Reader, rowNum int) (Item, error) {
+	item := Item{}
+	sc := bufio.NewScanner(r)
 	for sc.Scan() {
 		ss := strings.Fields(strings.Replace(sc.Text(), "\t", " ", -1))
 		if len(ss) < rowNum {
 			continue
 		}
-		items.Add(ss[rowNum-1])
+		item.Add(ss[rowNum-1])
 	}
 
-	w := bufio.NewWriter(&file)
-	for _, key := range items.Strings() {
-		fmt.Fprintf(w, "%s\n", key)
-	}
-	w.Flush()
-
-	return nil
+	return item, nil
 }

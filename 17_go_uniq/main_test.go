@@ -1,22 +1,18 @@
 package main
 
 import (
-	"bufio"
-	"os"
+	"strings"
 	"testing"
 )
 
 var uniqTests = []struct {
 	name   string
-	src    string
 	nRow   int
 	text   string
-	dest   string
 	expect []string
 }{
 	{
 		name: "should filter repeated lines of first colum in a file",
-		src:  "./test.txt",
 		nRow: 1,
 		text: `高知県	江川崎	41	2013-08-12
 埼玉県	熊谷	40.9	2007-08-16
@@ -42,7 +38,6 @@ var uniqTests = []struct {
 山梨県	大月	39.9	1990-07-19
 山形県	鶴岡	39.9	1978-08-03
 愛知県	名古屋	39.9	1942-08-02`,
-		dest: "./result.txt",
 		expect: []string{"高知県",
 			"埼玉県",
 			"岐阜県",
@@ -58,14 +53,12 @@ var uniqTests = []struct {
 	},
 	{
 		name: "should print lines of second colum in a file without any need to filter",
-		src:  "./test.txt",
 		nRow: 2,
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
 3	Lake_Victoria	68,870	2,760
 4	Lake_Huron	59,600	3,540
 5	Lake_Michigan	57,800	4,920`,
-		dest: "./result.txt",
 		expect: []string{"Caspian_Sea",
 			"Lake_Superior",
 			"Lake_Victoria",
@@ -74,14 +67,12 @@ var uniqTests = []struct {
 	},
 	{
 		name: "should return empty string while input nRow is over the length of rows on a file",
-		src:  "./test.txt",
 		nRow: 10,
 		text: `1	Caspian_Sea	436,000	78,200
 2	Lake_Superior	82,100	12,100
 3	Lake_Victoria	68,870	2,760
 4	Lake_Huron	59,600	3,540
 5	Lake_Michigan	57,800	4,920`,
-		dest:   "./result.txt",
 		expect: []string{},
 	},
 }
@@ -90,47 +81,16 @@ func TestUniq(t *testing.T) {
 	for _, testcase := range uniqTests {
 		t.Log(testcase.name)
 
-		f, err := os.Create(testcase.src)
+		r := strings.NewReader(testcase.text)
+		result, err := uniq(r, testcase.nRow)
 		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s\n", testcase.src, err)
+			t.Error(err)
 		}
-
-		f.WriteString(testcase.text)
-		f.Close()
-
-		dest, err := os.Create(testcase.dest)
-		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s\n", testcase.dest, err)
-		}
-
-		if err = uniq(testcase.src, testcase.nRow, *dest); err != nil {
-			t.Errorf("could not filter a line in specified file: %s\n  %s\n", testcase.src, err)
-		}
-		dest.Close()
-
-		dest, err = os.Open(testcase.dest)
-		if err != nil {
-			t.Errorf("could not open a file: %s\n  %s\n", testcase.dest, err)
-		}
-
-		sc := bufio.NewScanner(dest)
-		result := Item{}
-		for sc.Scan() {
-			result.Add(sc.Text())
-		}
-		dest.Close()
 
 		for _, expect := range testcase.expect {
 			if !result.Contains(expect) {
 				t.Errorf("result => %#v\n should contain => %#v\n", result, expect)
 			}
-		}
-
-		if err := os.Remove(testcase.src); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.src, err)
-		}
-		if err := os.Remove(testcase.dest); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.dest, err)
 		}
 	}
 }
