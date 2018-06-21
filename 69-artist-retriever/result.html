@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<style>
+	h1 {
+		font: 2em sans-serif;
+		margin: 0 auto;
+		padding: 0.5em;
+		text-align: center;
+	}
+
+	h2 {
+		font: 1.5em sans-serif;
+		margin: 0 auto;
+		padding: 0.5em;
+		text-align: center;
+
+	}
+
+	div+div {
+		margin-top: 1em;
+	}
+
+	.button {
+		text-align: center;
+	}
+
+	.square-button {
+		font: 0.8em sans-serif;
+		display: inline-block;
+		padding: 0.5em 1em;
+		text-decoration: none;
+		background-color: white;
+		color: black;
+		border: 1px solid rgba(0, 0, 0, 0.514);
+		border-radius: 8px;
+		transition-duration: 0.4s;
+	}
+
+	.square-button:hover {
+		background-color: rgba(0, 0, 0, 0.514);
+		color: white;
+	}
+
+	table {
+		margin-left: auto;
+		margin-right: auto;
+		border-collapse: collapse;
+	}
+
+	th {
+		border: solid 1px;
+		padding: 0.5em;
+		background: #ccccff
+	}
+
+	td {
+		text-align: center;
+		border: solid 1px;
+		padding: 0.5em;
+	}
+</style>
+
+<body>
+	<h1> Search Results </h1>
+	<h2> {{ len . }} artists found...</h2>
+	<div class="button">
+		<button class="square-button" type="button" onclick="history.back()">Back</button>
+	</div>
+	<div>
+		<table>
+			<tr>
+				<th>
+					<strong>Rating</strong>
+				</th>
+				<th>
+					<strong>Name</strong>
+				</th>
+				<th>
+					<strong>Area</strong>
+				</th>
+			</tr>
+			{{ range . }}
+			<tr>
+				<td>{{ if .Rating }} {{ .Rating.Count }} {{ else }} NA {{ end }}</td>
+				<td>{{ .Name }}</td>
+				<td>{{ if .Area }}{{ .Area }} {{ else }} Unknown {{ end }} </td>
+			</tr>
+			{{ end }}
+		</table>
+	</div>
+</body>

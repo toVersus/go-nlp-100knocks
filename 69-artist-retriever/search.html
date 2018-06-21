@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<style>
+	h1 {
+		font: 2em sans-serif;
+		margin: 0 auto;
+		width: 300px;
+		padding: 0.5em;
+		text-align: center;
+	}
+
+	form {
+		margin: 0 auto;
+		width: 300px;
+		padding: 1em;
+		border: 1px solid rgba(37, 37, 37, 0.144);
+		border-radius: 1em;
+	}
+
+	form div+div {
+		margin-top: 1em;
+	}
+
+	label {
+		display: inline-block;
+		width: 25%;
+		text-align: right;
+	}
+
+	input {
+		font: 1em sans-serif;
+		width: 190px;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+
+		border: 1px solid #999;
+	}
+
+	input:focus {
+		border-color: #000;
+	}
+
+	.square-button {
+		font: 0.8em sans-serif;
+		display: inline-block;
+		padding: 0.5em 1em;
+		text-decoration: none;
+		background-color: white;
+		color: black;
+		border: 1px solid rgba(0, 0, 0, 0.514);
+		border-radius: 8px;
+		transition-duration: 0.4s;
+	}
+
+	.square-button:hover {
+		background-color: rgba(0, 0, 0, 0.514);
+		color: white;
+	}
+
+	.button {
+		text-align: center;
+	}
+</style>
+
+<body>
+	<h1>Artist Database</h1>
+
+	<form action="/result/" method="POST">
+		<div>
+			<label for="artist-name">Name:</label>
+			<input class="search-condition" type="text" name="name" />
+		</div>
+		<div>
+			<label for="artist-alias">Alias:</label>
+			<input class="search-condition" type="text" name="alias" />
+		</div>
+		<div>
+			<label for="artist-tag">Tag:</label>
+			<input class="search-condition" type="text" name="tag" />
+		</div>
+		<div class="button">
+			<button class="square-button" type="submit">Search</button>
+		</div>
+	</form>
+</body>
+
+</html>
