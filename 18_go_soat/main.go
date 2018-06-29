@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strconv"
@@ -21,22 +23,22 @@ func main() {
 	flag.IntVar(&columnNum, "n", 1, "specify number of row to be sorted")
 	flag.Parse()
 
-	if _, err := os.Stat(filePath); err != nil {
-		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath, err)
+	f, err := os.Open(filePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", filePath, err)
 		os.Exit(1)
 	}
+	defer f.Close()
 
 	if columnNum <= 0 {
-		fmt.Println("please specify a natural number")
+		fmt.Fprintf(os.Stderr, "please specify a natural number, got=%d\n", columnNum)
 		os.Exit(1)
 	}
 
-	if err := Sort(filePath, columnNum, os.Stdout); err != nil {
-		fmt.Printf("could not sort lines of text in a file by specified row: %s\n", err)
-	}
+	fmt.Println(sortByColumnNum(f, columnNum).String())
 }
 
-// highTemp represents the details on high temperature in Japan
+// highTemp represents the information about the highest temperature in Japan
 type highTemp struct {
 	pref  string
 	city  string
@@ -44,19 +46,15 @@ type highTemp struct {
 	date  string
 }
 
-type highTempMap []highTemp
+type highTempMap []*highTemp
 
-func newHighTempMap(fp *os.File) highTempMap {
-	var (
-		fields  []string
-		tempMap highTempMap
-		temp    float64
-	)
-	sc := bufio.NewScanner(fp)
+func newHighTempMap(r io.Reader) highTempMap {
+	var tempMap highTempMap
+	sc := bufio.NewScanner(r)
 	for sc.Scan() {
-		fields = strings.Fields(strings.Replace(sc.Text(), "\t", " ", -1))
-		temp, _ = strconv.ParseFloat(fields[2], 64)
-		tempMap = append(tempMap, highTemp{
+		fields := strings.Fields(strings.Replace(sc.Text(), "\t", " ", -1))
+		temp, _ := strconv.ParseFloat(fields[2], 64)
+		tempMap = append(tempMap, &highTemp{
 			pref: fields[0], city: fields[1], value: temp, date: fields[3],
 		})
 	}
@@ -68,15 +66,22 @@ func (ht *highTemp) String() string {
 	return fmt.Sprintf("%s\t%s\t%g\t%s", ht.pref, ht.city, ht.value, ht.date)
 }
 
-// Sort sorts the high temperature map in stable order as well as in ascending order.
-func Sort(path string, columnNum int, file *os.File) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return err
+func (htm highTempMap) String() string {
+	var out bytes.Buffer
+	for i, t := range htm {
+		out.WriteString(t.String())
+		if i == len(htm)-1 {
+			break
+		}
+		out.WriteString("\n")
 	}
-	defer f.Close()
 
-	tempMap := newHighTempMap(f)
+	return out.String()
+}
+
+// sortByColumnNum sorts the high temperature map in stable order as well as in ascending order.
+func sortByColumnNum(r io.Reader, columnNum int) highTempMap {
+	tempMap := newHighTempMap(r)
 
 	comparators := []func(int, int) bool{
 		func(i, j int) bool { return tempMap[i].pref > tempMap[j].pref },
@@ -86,15 +91,17 @@ func Sort(path string, columnNum int, file *os.File) error {
 	}
 	sort.SliceStable(tempMap, comparators[columnNum-1])
 
-	w := bufio.NewWriter(file)
-	defer w.Flush()
-	for i, t := range tempMap {
-		fmt.Fprint(w, t.String())
-		if i == len(tempMap)-1 {
-			break
-		}
-		fmt.Fprintln(w, "")
+	return tempMap
+}
+
+// output just creates a file with given contents.
+func output(filepath, content string) error {
+	f, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("could not create a file: %s", err)
 	}
+	defer f.Close()
+	f.WriteString(content)
 
 	return nil
 }
