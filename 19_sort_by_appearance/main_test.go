@@ -1,23 +1,19 @@
 package main
 
 import (
-	"io/ioutil"
-	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
 var sortByOverlapCountTests = []struct {
 	name      string
-	src       string
 	columnNum int
 	text      string
-	dest      string
 	expect    string
 }{
 	{
-		name:      "should sort lines of text file counting overlap counts of 1st column",
-		src:       "./test.txt",
+		name:      "should sort the full text by counting overlaps of 1st column",
 		columnNum: 1,
 		text: `高知県	江川崎	41	2013-08-12
 埼玉県	熊谷	40.9	2007-08-16
@@ -43,7 +39,6 @@ var sortByOverlapCountTests = []struct {
 山梨県	大月	39.9	1990-07-19
 山形県	鶴岡	39.9	1978-08-03
 愛知県	名古屋	39.9	1942-08-02`,
-		dest: "./result.txt",
 		expect: `群馬県	館林	40.3	2007-08-16
 群馬県	上里見	40.3	1998-07-04
 群馬県	前橋	40	2001-07-24
@@ -75,33 +70,10 @@ func TestSortByOverlapCount(t *testing.T) {
 	for _, testcase := range sortByOverlapCountTests {
 		t.Log(testcase.name)
 
-		src, err := os.Create(testcase.src)
-		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s\n", testcase.src, err)
-		}
-		src.WriteString(testcase.text)
-		src.Close()
-
-		dest, err := os.Create(testcase.dest)
-		if err != nil {
-			t.Errorf("could not create a file: %s\n  %s\n", testcase.dest, err)
-		}
-
-		if err := sortByVotes(testcase.src, testcase.columnNum, *dest); err != nil {
-			t.Errorf("could not sort by overlap counts\n  %s\n", err)
-		}
-
-		result, _ := ioutil.ReadFile(testcase.dest)
-		dest.Close()
+		r := strings.NewReader(testcase.text)
+		result := sortByVotes(r, testcase.columnNum).String()
 		if !reflect.DeepEqual(string(result), testcase.expect) {
 			t.Errorf("result => %#v\n should contain => %#v\n", string(result), testcase.expect)
-		}
-
-		if err := os.Remove(testcase.src); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.src, err)
-		}
-		if err := os.Remove(testcase.dest); err != nil {
-			t.Errorf("could not delete a file: %s\n  %s\n", testcase.dest, err)
 		}
 	}
 }
