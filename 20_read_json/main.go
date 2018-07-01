@@ -20,49 +20,41 @@ type Article struct {
 type Articles []Article
 
 func main() {
-	var (
-		filePath string
-		keyword  string
-	)
+	var filePath, keyword string
 	flag.StringVar(&filePath, "file", "", "specify a file path")
 	flag.StringVar(&filePath, "f", "", "specify a file path")
 	flag.StringVar(&keyword, "key", "", "specify a keyword for filtering a wiki page")
 	flag.Parse()
 
-	if _, err := os.Stat(filePath); err != nil {
-		fmt.Fprintf(os.Stderr, "could not find a file: %s\n  %s\n", filePath, err)
-		os.Exit(1)
-	}
-
-	filtered, err := readJSON(filePath)
+	f, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "could not open a file: %s\n  %s", filePath, err)
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	articles, err := readJSON(f)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not get the list of articles: %s\n", err)
 		os.Exit(1)
 	}
 
-	for _, a := range filtered.find(keyword) {
+	for _, a := range articles.find(keyword) {
 		fmt.Println(a.Text)
 	}
 }
 
 // readJSON reads/parses the json file and initiates Articles instance
-func readJSON(path string) (Articles, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("could not open a file specified: %s\n  %s", path, err)
-	}
-	defer f.Close()
-
-	reader := bufio.NewReader(f)
+func readJSON(r io.Reader) (Articles, error) {
+	reader := bufio.NewReader(r)
 	article, articles := Article{}, Articles{}
 	for {
 		buf, readErr := reader.ReadBytes('\n')
 		if (readErr != nil) && (readErr != io.EOF) {
 			return nil, fmt.Errorf("could not read a file content: %s", readErr)
 		}
-		if err = json.Unmarshal(buf, &article); err != nil {
-			fmt.Printf("could not parse json file: %s", err)
-			break
+		if err := json.Unmarshal(buf, &article); err != nil {
+			return nil, fmt.Errorf("could not parse json file: %s", err)
 		}
 
 		articles = append(articles, article)
