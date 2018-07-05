@@ -56,7 +56,8 @@ func BenchmarkSelectCategory(b *testing.B) {
 			r := strings.NewReader(testcase.text)
 			filtered, _ := readJSON(r)
 			b.StartTimer()
-			filtered.find(testcase.keyword).getCategory()
+
+			categories = filtered.find(testcase.keyword).getCategory()
 		}
 	}
 	result = categories
