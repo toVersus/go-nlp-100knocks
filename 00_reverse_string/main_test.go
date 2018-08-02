@@ -11,7 +11,7 @@ var reverseTests = []struct {
 	expect string
 }{
 	{
-		name:   "should return byte array in reverse order",
+		name:   "should return string in reverse order",
 		str:    "stressed",
 		expect: "desserts",
 	},
@@ -46,14 +46,18 @@ func TestReverseBySelfImplSwapper(t *testing.T) {
 	}
 }
 
+var result string
+
 func BenchmarkReverseStringRecursively(b *testing.B) {
+	var s string
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, testcase := range reverseTests {
 			b := []byte(testcase.str)
-			reverseStringRecursively(b)
+			s = string(reverseStringRecursively(b))
 		}
 	}
+	result = s
 }
 
 func BenchmarkReverseBySwapper(b *testing.B) {
@@ -67,20 +71,24 @@ func BenchmarkReverseBySwapper(b *testing.B) {
 }
 
 func BenchmarkReverseBySelfImplSwapper(b *testing.B) {
+	var s string
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, testcase := range reverseTests {
-			reverseBySelfImplSwapper(testcase.str)
+			s = reverseBySelfImplSwapper(testcase.str)
 		}
 	}
+	result = s
 }
 
 func BenchmarkReverseByDeferStringBuilder(b *testing.B) {
+	var s string
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, testcase := range reverseTests {
 			buf := *reverseByDeferStringBuilder(testcase.str)
-			buf.String()
+			s = buf.String()
 		}
 	}
+	result = s
 }

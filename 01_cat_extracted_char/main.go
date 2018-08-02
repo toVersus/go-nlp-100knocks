@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"unicode/utf8"
 )
@@ -24,11 +25,11 @@ func delCharInSequence(str string) string {
 // This is basic and simple answer.
 func catCharInSequence(str string) string {
 	r := []rune(str)
-	result := ""
+	var out bytes.Buffer
 	for _, i := range []int{0, 2, 4, 6} {
-		result += string(r[i])
+		out.WriteString(string(r[i]))
 	}
-	return result
+	return out.String()
 }
 
 // catSepCharInSequence extracts either odd-numbered or even-numbered elements from byte slice
